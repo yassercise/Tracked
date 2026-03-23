@@ -119,12 +119,11 @@
     .search-results{max-height:260px;overflow-y:auto;margin-bottom:12px;}
     .search-result{padding:11px 12px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);margin-bottom:6px;cursor:pointer;}
     .search-result:active{background:var(--bg4);}
-    .search-result-name{font-size:13px;font-weight:500;color:var(--text);}
-    .search-result-brand{font-size:11px;color:var(--text2);margin-top:2px;}
+    .search-result-name{font-size:13px;font-weight:500;color:var(--text);text-transform:capitalize;}
     .search-result-macros{font-size:11px;color:var(--text3);margin-top:4px;}
     .search-empty{text-align:center;padding:24px;font-size:13px;color:var(--text3);}
     .selected-food{background:var(--green-dim);border:0.5px solid rgba(29,158,117,0.4);border-radius:10px;padding:12px;margin-bottom:12px;}
-    .selected-food-name{font-size:13px;font-weight:500;color:var(--text);}
+    .selected-food-name{font-size:13px;font-weight:500;color:var(--text);text-transform:capitalize;}
     .selected-food-macros{font-size:12px;color:var(--text2);margin-top:4px;}
   </style>
 </head>
@@ -226,11 +225,12 @@
         <option value="snack2">Snack 2</option>
         <option value="dinner">Dinner</option>
       </select>
-      <label>Search food or brand</label>
+      <label>Search food</label>
       <div class="search-input-wrap">
-        <input type="text" id="searchInput" placeholder="e.g. chicken breast, Nada milk..." oninput="handleSearch()" autocomplete="off" />
+        <input type="text" id="searchInput" placeholder="e.g. chicken breast, rice, banana..." autocomplete="off" />
         <div class="search-spinner" id="searchSpinner"></div>
       </div>
+      <button class="btn btn-save" style="width:100%;margin-bottom:12px;padding:11px;" onclick="doSearch()">Search</button>
       <div class="search-results" id="searchResults"></div>
       <div id="selectedFoodWrap" style="display:none">
         <div class="selected-food" id="selectedFoodCard"></div>
@@ -270,6 +270,7 @@
 </div>
 
 <script>
+const API_KEY = 'TeEmaa4OORqOHUIyKV81auP3wh12QsDPqQxUK4F2';
 const DEFAULT_MEALS={
   breakfast:[
     {id:'b1',name:'Egg sandwich x2',icon:'🍳',cal:992,prot:35,carb:60,fat:45},
@@ -295,7 +296,7 @@ const LABELS={breakfast:'Breakfast',snack1:'Snack 1',lunch:'Lunch',snack2:'Snack
 const TARGET={cal:2865,prot:183,carb:300,fat:80};
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-let dayOff=0,weekOff=0,monthOff=0,activeTab='search',selFood=null,selPer100=null,searchTimer=null;
+let dayOff=0,weekOff=0,monthOff=0,activeTab='search',selFood=null,selPer100=null;
 
 function gs(){try{return JSON.parse(localStorage.getItem('td')||'{}')}catch{return{}}}
 function ss(d){try{localStorage.setItem('td',JSON.stringify(d))}catch{}}
@@ -435,38 +436,39 @@ function switchTab(tab){
   document.getElementById('tabManual').classList.toggle('active',tab==='manual');
 }
 
-function handleSearch(){
-  clearTimeout(searchTimer);
+async function doSearch(){
   const q=document.getElementById('searchInput').value.trim();
-  if(q.length<2){document.getElementById('searchResults').innerHTML='';return;}
-  searchTimer=setTimeout(()=>doSearch(q),600);
-}
-
-async function doSearch(q){
+  if(!q)return;
   const spinner=document.getElementById('searchSpinner'),results=document.getElementById('searchResults');
   spinner.classList.add('active');results.innerHTML='';
+  selFood=null;selPer100=null;
+  document.getElementById('selectedFoodWrap').style.display='none';
   try{
-    const res=await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=12&fields=product_name,brands,nutriments`);
+    const res=await fetch(`https://api.calorieninjas.com/v1/nutrition?query=${encodeURIComponent(q)}`,{headers:{'X-Api-Key':API_KEY}});
     const data=await res.json();
     spinner.classList.remove('active');
-    const products=(data.products||[]).filter(p=>p.product_name&&p.nutriments&&p.nutriments['energy-kcal_100g']);
-    if(!products.length){results.innerHTML='<div class="search-empty">No results found</div>';return;}
-    products.slice(0,8).forEach(p=>{
-      const n=p.nutriments;
-      const cal=Math.round(n['energy-kcal_100g']||0),prot=Math.round(n['proteins_100g']||0),carb=Math.round(n['carbohydrates_100g']||0),fat=Math.round(n['fat_100g']||0);
+    const items=data.items||[];
+    if(!items.length){results.innerHTML='<div class="search-empty">No results found. Try a different search term.</div>';return;}
+    items.forEach(item=>{
+      const cal=Math.round(item.calories||0),prot=Math.round(item.protein_g||0),carb=Math.round(item.carbohydrates_total_g||0),fat=Math.round(item.fat_total_g||0),serving=Math.round(item.serving_size_g||100);
       const div=document.createElement('div');div.className='search-result';
-      div.innerHTML=`<div class="search-result-name">${p.product_name}</div>${p.brands?`<div class="search-result-brand">${p.brands}</div>`:''}<div class="search-result-macros">Per 100g: ${cal} kcal &middot; P:${prot}g &middot; C:${carb}g &middot; F:${fat}g</div>`;
-      div.onclick=()=>selectFood(p.product_name,p.brands||'',cal,prot,carb,fat);
+      div.innerHTML=`<div class="search-result-name">${item.name}</div><div class="search-result-macros">Per ${serving}g: ${cal} kcal &middot; P:${prot}g &middot; C:${carb}g &middot; F:${fat}g</div>`;
+      div.onclick=()=>selectFood(item.name,cal,prot,carb,fat,serving);
       results.appendChild(div);
     });
-  }catch(e){spinner.classList.remove('active');results.innerHTML='<div class="search-empty">Search unavailable - check connection</div>';}
+  }catch(e){
+    spinner.classList.remove('active');
+    results.innerHTML='<div class="search-empty">Search unavailable. Check your connection.</div>';
+  }
 }
 
-function selectFood(name,brand,cal,prot,carb,fat){
-  selPer100={name,brand,cal,prot,carb,fat};
+document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
+
+function selectFood(name,cal,prot,carb,fat,serving){
+  const per100cal=Math.round(cal/serving*100),per100prot=Math.round(prot/serving*100),per100carb=Math.round(carb/serving*100),per100fat=Math.round(fat/serving*100);
+  selPer100={name,cal:per100cal,prot:per100prot,carb:per100carb,fat:per100fat};
   document.getElementById('searchResults').innerHTML='';
-  document.getElementById('searchInput').value=name;
-  document.getElementById('servingSize').value='100';
+  document.getElementById('servingSize').value=serving;
   document.getElementById('selectedFoodWrap').style.display='block';
   updateServing();
 }
@@ -474,7 +476,7 @@ function updateServing(){
   if(!selPer100)return;
   const g=parseFloat(document.getElementById('servingSize').value)||100,r=g/100,f=selPer100;
   selFood={name:f.name,cal:Math.round(f.cal*r),prot:Math.round(f.prot*r),carb:Math.round(f.carb*r),fat:Math.round(f.fat*r)};
-  document.getElementById('selectedFoodCard').innerHTML=`<div class="selected-food-name">${f.name}${f.brand?' - '+f.brand:''} (${g}g)</div><div class="selected-food-macros">${selFood.cal} kcal &middot; P:${selFood.prot}g &middot; C:${selFood.carb}g &middot; F:${selFood.fat}g</div>`;
+  document.getElementById('selectedFoodCard').innerHTML=`<div class="selected-food-name">${f.name} (${g}g)</div><div class="selected-food-macros">${selFood.cal} kcal &middot; P:${selFood.prot}g &middot; C:${selFood.carb}g &middot; F:${selFood.fat}g</div>`;
 }
 
 function saveMeal(){
@@ -484,7 +486,7 @@ function saveMeal(){
     if(!selFood){alert('Please select a food first');return;}
     const cat=document.getElementById('searchCat').value;
     custom[key].push({id:'c_'+Date.now(),name:selFood.name,icon:'🍽',cal:selFood.cal,prot:selFood.prot,carb:selFood.carb,fat:selFood.fat,cat});
-  } else {
+  }else{
     const name=document.getElementById('mealName').value.trim();
     if(!name){alert('Please enter a meal name');return;}
     const cat=document.getElementById('manualCat').value;
