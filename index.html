@@ -444,7 +444,7 @@ async function doSearch(){
   selFood=null;selPer100=null;
   document.getElementById('selectedFoodWrap').style.display='none';
   try{
-    const res=await fetch(`https://api.calorieninjas.com/v1/nutrition?query=${encodeURIComponent(q)}`,{headers:{'X-Api-Key':API_KEY}});
+    const res=await fetch(`/api/search?query=${encodeURIComponent(q)}`);
     const data=await res.json();
     spinner.classList.remove('active');
     const items=data.items||[];
