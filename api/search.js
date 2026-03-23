@@ -6,11 +6,11 @@ export default async function handler(req, res) {
   if (!query) return res.status(400).json({ error: 'No query provided' });
 
   try {
-    const response = await fetch(`https://api.calorieninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`, {
+    const response = await fetch(`https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`, {
       headers: { 'X-Api-Key': 'TeEmaa4OORqOHUIyKV81auP3wh12QsDPqQxUK4F2' }
     });
     const data = await response.json();
-    res.status(200).json(data);
+    res.status(200).json({ items: Array.isArray(data) ? data : [] });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch nutrition data' });
   }
