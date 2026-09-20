@@ -348,10 +348,9 @@ window.switchLogTab = function(tab) {
 
 // ─── FOOD SEARCH ───────────────────────────────────────────────────────────
 async function fetchNutrition(q) {
-  const url = 'https://corsproxy.io/?' + encodeURIComponent('https://api.api-ninjas.com/v1/nutrition?query=' + encodeURIComponent(q));
-  const res = await fetch(url, { headers: { 'X-Api-Key': API_KEY } });
+  const res = await fetch('/api/search?query=' + encodeURIComponent(q));
   const data = await res.json();
-  return Array.isArray(data) ? data : (data.items || []);
+  return Array.isArray(data.items) ? data.items : [];
 }
 
 window.doSearch = async function() {
