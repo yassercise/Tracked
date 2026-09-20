@@ -584,42 +584,67 @@ window.openCreateFoodModal=function(){['cfName','cfServing','cfCal','cfProt','cf
 
 // ─── AI SCAN IMAGES ────────────────────────────────────────────────────────
 window._scanImages = [];
-window.handleScanImages = function(input) {
-  const files = Array.from(input.files).slice(0,4);
-  const thumbs = document.getElementById('scanThumbnails');
-  thumbs.innerHTML=''; window._scanImages=[];
-  files.forEach(file=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      window._scanImages.push({data:e.target.result.split(',')[1],mediaType:file.type||'image/jpeg'});
-      const img=document.createElement('img');
-      img.src=e.target.result;
-      img.style.cssText='width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid var(--card-border);';
-      thumbs.appendChild(img);
+
+function compressImage(file, maxWidth, quality) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve({ data: compressed.split(',')[1], mediaType: 'image/jpeg', preview: compressed });
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });
+}
+
+window.handleScanImages = async function(input) {
+  const files = Array.from(input.files).slice(0, 4);
+  const thumbs = document.getElementById('scanThumbnails');
+  thumbs.innerHTML = ''; window._scanImages = [];
+  for (const file of files) {
+    const compressed = await compressImage(file, 800, 0.7);
+    window._scanImages.push({ data: compressed.data, mediaType: compressed.mediaType });
+    const img = document.createElement('img');
+    img.src = compressed.preview;
+    img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid var(--card-border);';
+    thumbs.appendChild(img);
+  }
 };
 
-window.analyzeMealLog=async function(){
-  const desc=document.getElementById('scanDescLog').value.trim();
-  const status=document.getElementById('scanStatusLog');
-  if(!window._scanImages.length&&!desc){status.textContent='Please add a photo or description.';return;}
-  status.textContent='Analyzing with AI...';
-  document.getElementById('scanResultLog').style.display='none';
-  try{
-    const response=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({images:window._scanImages,description:desc})});
-    const result=await response.json();
-    if(result.error) throw new Error(result.error);
-    status.textContent='';
-    document.getElementById('scanResultLog').style.display='block';
-    document.getElementById('scanEditName').value=result.name;
-    document.getElementById('scanEditCal').value=result.cal;
-    document.getElementById('scanEditProt').value=result.prot;
-    document.getElementById('scanEditCarb').value=result.carb;
-    document.getElementById('scanEditFat').value=result.fat;
-    document.getElementById('scanResultNotesLog').textContent=result.notes||'';
-  }catch(e){status.textContent='Analysis failed. Please try again.';}
+window.analyzeMealLog = async function() {
+  const desc = document.getElementById('scanDescLog').value.trim();
+  const status = document.getElementById('scanStatusLog');
+  if (!window._scanImages.length && !desc) { status.textContent = 'Please add a photo or description.'; return; }
+  status.textContent = 'Analyzing with AI...';
+  document.getElementById('scanResultLog').style.display = 'none';
+  try {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: window._scanImages, description: desc })
+    });
+    if (!response.ok) throw new Error('Server error: ' + response.status);
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    status.textContent = '';
+    document.getElementById('scanResultLog').style.display = 'block';
+    document.getElementById('scanEditName').value = result.name;
+    document.getElementById('scanEditCal').value = result.cal;
+    document.getElementById('scanEditProt').value = result.prot;
+    document.getElementById('scanEditCarb').value = result.carb;
+    document.getElementById('scanEditFat').value = result.fat;
+    document.getElementById('scanResultNotesLog').textContent = result.notes || '';
+  } catch(e) {
+    status.textContent = 'Analysis failed: ' + e.message;
+  }
 };
 
 window.addScannedMealLog=async function(){
