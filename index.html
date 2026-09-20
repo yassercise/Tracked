@@ -15,63 +15,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
-<style>
-/* History extras */
-.history-day-cal { font-size: 12px; color: var(--text-dim); font-weight: 600; margin-top: 2px; }
-.history-progress-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--card-border); }
-.history-progress-item {}
-.history-progress-label { font-size: 11px; font-weight: 700; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
-.history-progress-bar { height: 5px; background: var(--card-border); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
-.history-progress-fill { height: 100%; border-radius: 3px; transition: width 600ms cubic-bezier(0.16,1,0.3,1); }
-.history-progress-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); font-weight: 600; }
-.history-meal-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--card-border); }
-.history-meal-row:last-child { border-bottom: none; }
-.history-meal-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
-.history-meal-name { flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-dim); }
-.history-meal-cal { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: var(--text); }
-
-/* Water dot as button */
-.water-dot { background: none; border: 1.5px solid var(--card-border); cursor: pointer; }
-
-/* Scan modal */
-.scan-upload-area { border: 1.5px dashed var(--card-border); border-radius: 16px; padding: 28px; text-align: center; cursor: pointer; margin-bottom: 14px; transition: border-color 200ms ease; background: var(--bg); }
-.scan-upload-area:hover { border-color: var(--accent); }
-.scan-upload-area input { display: none; }
-.scan-upload-icon { font-size: 32px; margin-bottom: 8px; }
-.scan-upload-label { font-size: 13px; font-weight: 600; color: var(--text-dim); }
-.scan-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 14px; display: none; }
-.scan-status { font-size: 13px; color: var(--text-dim); text-align: center; margin-bottom: 10px; min-height: 20px; }
-.scan-result { background: var(--green-bg); border: 1px solid rgba(22,168,99,0.25); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: none; }
-.scan-result-name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 4px; text-transform: capitalize; }
-.scan-result-macros { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--green); font-weight: 600; margin-bottom: 6px; }
-.scan-result-notes { font-size: 11.5px; color: var(--text-dim); }
-</style>
 </head>
 <body>
-
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
 
-<!-- DESKTOP SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-wordmark">TRACKED<span>FOOD & MACROS</span></div>
   <div class="sidebar-rail-label">Menu</div>
   <nav class="sidebar-nav">
-    <button class="sidebar-item active" data-tab="today" onclick="window.showTab('today',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today
-    </button>
-    <button class="sidebar-item" data-tab="log" onclick="window.showTab('log',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>Log Meal
-    </button>
-    <button class="sidebar-item" data-tab="history" onclick="window.showTab('history',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>History
-    </button>
-    <button class="sidebar-item" data-tab="trends" onclick="window.showTab('trends',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends
-    </button>
-    <button class="sidebar-item" data-tab="settings" onclick="window.showTab('settings',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings
-    </button>
+    <button class="sidebar-item active" data-tab="today" onclick="window.showTab('today',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today</button>
+    <button class="sidebar-item" data-tab="log" onclick="window.showTab('log',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>Log Meal</button>
+    <button class="sidebar-item" data-tab="history" onclick="window.showTab('history',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>History</button>
+    <button class="sidebar-item" data-tab="trends" onclick="window.showTab('trends',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends</button>
+    <button class="sidebar-item" data-tab="settings" onclick="window.showTab('settings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings</button>
   </nav>
 </aside>
 
@@ -81,7 +38,7 @@
   <div class="screen active" id="screen-today">
     <div class="page-header">
       <div class="page-eyebrow">TRACKED</div>
-      <div class="page-title" id="todayTitle">Today</div>
+      <div class="page-title">Today</div>
       <div class="page-date" id="todayDate"></div>
     </div>
     <div class="body-hero">
@@ -96,50 +53,19 @@
       </div>
     </div>
     <div class="macro-grid">
-      <div class="macro-card">
-        <div class="macro-label">Calories</div>
-        <div class="macro-val" id="mCal">0</div>
-        <div class="macro-target" id="mCalTarget">/ 2865</div>
-        <div class="macro-bar"><div class="macro-fill fill-cal" id="mCalBar" style="width:0%"></div></div>
-      </div>
-      <div class="macro-card">
-        <div class="macro-label">Protein</div>
-        <div class="macro-val" id="mProt">0<span>g</span></div>
-        <div class="macro-target" id="mProtTarget">/ 183g</div>
-        <div class="macro-bar"><div class="macro-fill fill-prot" id="mProtBar" style="width:0%"></div></div>
-      </div>
-      <div class="macro-card">
-        <div class="macro-label">Carbs</div>
-        <div class="macro-val" id="mCarb">0<span>g</span></div>
-        <div class="macro-target" id="mCarbTarget">/ 300g</div>
-        <div class="macro-bar"><div class="macro-fill fill-carb" id="mCarbBar" style="width:0%"></div></div>
-      </div>
-      <div class="macro-card">
-        <div class="macro-label">Fats</div>
-        <div class="macro-val" id="mFat">0<span>g</span></div>
-        <div class="macro-target" id="mFatTarget">/ 80g</div>
-        <div class="macro-bar"><div class="macro-fill fill-fat" id="mFatBar" style="width:0%"></div></div>
-      </div>
+      <div class="macro-card"><div class="macro-label">Calories</div><div class="macro-val" id="mCal">0</div><div class="macro-target" id="mCalTarget">/ 2865</div><div class="macro-bar"><div class="macro-fill fill-cal" id="mCalBar" style="width:0%"></div></div></div>
+      <div class="macro-card"><div class="macro-label">Protein</div><div class="macro-val" id="mProt">0<span>g</span></div><div class="macro-target" id="mProtTarget">/ 183g</div><div class="macro-bar"><div class="macro-fill fill-prot" id="mProtBar" style="width:0%"></div></div></div>
+      <div class="macro-card"><div class="macro-label">Carbs</div><div class="macro-val" id="mCarb">0<span>g</span></div><div class="macro-target" id="mCarbTarget">/ 300g</div><div class="macro-bar"><div class="macro-fill fill-carb" id="mCarbBar" style="width:0%"></div></div></div>
+      <div class="macro-card"><div class="macro-label">Fats</div><div class="macro-val" id="mFat">0<span>g</span></div><div class="macro-target" id="mFatTarget">/ 80g</div><div class="macro-bar"><div class="macro-fill fill-fat" id="mFatBar" style="width:0%"></div></div></div>
     </div>
     <div class="glow-line"></div>
+    <div id="carryoverBanner" style="display:none"><div class="carryover-banner"><div style="font-size:18px">↩</div><div class="carryover-text" id="carryoverText"></div></div></div>
+    <div class="section-head"><div class="section-title">Meals</div><button class="section-add" onclick="window.showTab('log',document.querySelector('[data-tab=log]'))">+</button></div>
+    <div id="mealsContainer"></div>
     <div class="water-card">
-      <div class="water-head">
-        <div class="water-title">Water</div>
-        <div class="water-val" id="waterVal">0 / 8 glasses</div>
-      </div>
+      <div class="water-head"><div class="water-title">Water</div><div class="water-val" id="waterVal">0 / 8 glasses</div></div>
       <div class="water-dots" id="waterDots"></div>
     </div>
-    <div id="carryoverBanner" style="display:none">
-      <div class="carryover-banner">
-        <div style="font-size:18px">↩️</div>
-        <div class="carryover-text" id="carryoverText"></div>
-      </div>
-    </div>
-    <div class="section-head">
-      <div class="section-title">Meals</div>
-      <button class="section-add" onclick="window.openLogModal()">+</button>
-    </div>
-    <div id="mealsContainer"></div>
   </div>
 
   <!-- LOG -->
@@ -148,154 +74,137 @@
       <div class="page-eyebrow">ADD FOOD</div>
       <div class="page-title">Log Meal</div>
     </div>
-    <div class="log-tabs">
-      <button class="log-tab active" onclick="window.switchLogTab('search')">Search</button>
+    <!-- Persistent search + category -->
+    <div style="padding:0 20px 8px;display:flex;gap:8px;align-items:center;">
+      <select id="logCat" style="border:1px solid var(--card-border);border-radius:12px;padding:10px 12px;font-size:13px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;flex-shrink:0;">
+        <option value="breakfast">Breakfast</option>
+        <option value="lunch">Lunch</option>
+        <option value="dinner">Dinner</option>
+        <option value="snacks">Snacks</option>
+        <option value="drinks">Drinks</option>
+      </select>
+    </div>
+    <div class="search-wrap" style="padding-top:0;">
+      <div class="search-box">
+        <input class="search-input" id="searchInput" type="text" placeholder="Search food..." autocomplete="off"/>
+        <button class="search-btn" onclick="window.doSearch()">Search</button>
+      </div>
+    </div>
+    <div style="padding:0 20px 10px;text-align:center;"><div class="search-spinner" id="searchSpinner"></div></div>
+    <div class="search-results" id="searchResults"></div>
+
+    <div class="log-tabs" style="margin-top:4px;">
+      <button class="log-tab active" onclick="window.switchLogTab('recent')">Recent</button>
       <button class="log-tab" onclick="window.switchLogTab('myfoods')">My Foods</button>
       <button class="log-tab" onclick="window.switchLogTab('manual')">Manual</button>
-      <button class="log-tab" onclick="window.switchLogTab('scan')">📷 AI Scan</button>
+      <button class="log-tab" onclick="window.switchLogTab('scan')">AI Scan</button>
     </div>
-    <div id="logTabSearch">
-      <div class="search-wrap">
-        <div class="search-box">
-          <input class="search-input" id="searchInput" type="text" placeholder="chicken breast, rice..." autocomplete="off"/>
-          <button class="search-btn" onclick="window.doSearch()">Search</button>
-        </div>
+
+    <div id="logTabRecent"><div class="my-foods-list" id="recentList" style="padding:12px 20px;"></div></div>
+
+    <div id="logTabMyfoods" style="display:none;">
+      <div style="padding:12px 20px 8px;display:flex;justify-content:flex-end;">
+        <button onclick="window.openCreateFoodModal()" style="background:var(--accent);color:#fff;border:none;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:700;font-family:'Manrope',sans-serif;">+ Create Food</button>
       </div>
-      <div style="padding:0 20px 12px;text-align:center;"><div class="search-spinner" id="searchSpinner"></div></div>
-      <div class="search-results" id="searchResults"></div>
+      <div class="my-foods-list" id="myFoodsList" style="padding:0 20px;"></div>
     </div>
-    <div id="logTabMyfoods" style="display:none">
-      <div style="padding:16px 20px 10px;display:flex;justify-content:flex-end;">
-        <button onclick="window.openCreateFoodModal()" style="background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;font-family:'Manrope',sans-serif;">+ Create Food</button>
-      </div>
-      <div class="my-foods-list" id="myFoodsList"></div>
-    </div>
+
     <div id="logTabManual" style="display:none;padding:16px 20px;">
-      <label>Category</label>
+      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Category</label>
       <select id="manualCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
-        <option value="breakfast">🍳 Breakfast</option>
-        <option value="snack1">🥜 Snack 1</option>
-        <option value="lunch">🍗 Lunch</option>
-        <option value="snack2">🫙 Snack 2</option>
-        <option value="dinner">🌯 Dinner</option>
+        <option value="breakfast">Breakfast</option>
+        <option value="lunch">Lunch</option>
+        <option value="dinner">Dinner</option>
+        <option value="snacks">Snacks</option>
+        <option value="drinks">Drinks</option>
       </select>
-      <label>Meal name</label>
+      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Meal name</label>
       <input type="text" id="manualName" placeholder="e.g. Grilled salmon" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;"/>
-      <label>Icon (emoji)</label>
-      <input type="text" id="manualIcon" placeholder="🍽" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;"/>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <div><label>Calories</label><input type="number" id="manualCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
-        <div><label>Protein (g)</label><input type="number" id="manualProt" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+        <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Calories</label><input type="number" id="manualCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+        <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Protein (g)</label><input type="number" id="manualProt" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;">
-        <div><label>Carbs (g)</label><input type="number" id="manualCarb" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
-        <div><label>Fats (g)</label><input type="number" id="manualFat" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+        <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Carbs (g)</label><input type="number" id="manualCarb" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+        <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Fats (g)</label><input type="number" id="manualFat" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
       </div>
       <button class="settings-save" onclick="window.saveManualMeal()">Add to Today</button>
     </div>
+
     <div id="logTabScan" style="display:none;padding:16px 20px;">
-      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;font-weight:600;">Take a photo of your meal and Claude AI will estimate the macros.</p>
-      <label class="scan-upload-area" for="scanImageInputLog">
-        <input type="file" id="scanImageInputLog" accept="image/*" capture="environment" onchange="window.handleScanImageLog(this)"/>
-        <div class="scan-upload-icon">📷</div>
-        <div class="scan-upload-label">Tap to take photo or upload</div>
-      </label>
-      <img class="scan-preview" id="scanPreviewLog" alt="meal preview"/>
-      <label>Approximate weight (optional)</label>
-      <input type="text" id="scanWeightLog" placeholder="e.g. 300g or leave blank" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;"/>
-      <label>Category</label>
-      <select id="scanCatLog" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
-        <option value="breakfast">🍳 Breakfast</option>
-        <option value="snack1">🥜 Snack 1</option>
-        <option value="lunch">🍗 Lunch</option>
-        <option value="snack2">🫙 Snack 2</option>
-        <option value="dinner">🌯 Dinner</option>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;font-weight:600;">Add photos and/or describe your meal. At least one is required.</p>
+      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">Photos (up to 4)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+        <label for="scanImageInputLog" style="width:72px;height:72px;border:1.5px dashed var(--card-border);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:var(--bg);flex-shrink:0;">
+          <input type="file" id="scanImageInputLog" accept="image/*" multiple style="display:none;" onchange="window.handleScanImages(this)"/>
+          <div style="font-size:11px;font-weight:700;color:var(--text-faint);">+ Photo</div>
+        </label>
+        <div id="scanThumbnails" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Description</label>
+      <textarea id="scanDescLog" placeholder="e.g. 200g grilled chicken breast with olive oil, 100g broccoli..." style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;resize:none;min-height:80px;"></textarea>
+      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Category</label>
+      <select id="scanCatLog" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:16px;outline:none;">
+        <option value="breakfast">Breakfast</option>
+        <option value="lunch">Lunch</option>
+        <option value="dinner">Dinner</option>
+        <option value="snacks">Snacks</option>
+        <option value="drinks">Drinks</option>
       </select>
       <button class="settings-save" style="margin:0 0 14px;" onclick="window.analyzeMealLog()">Analyze with AI</button>
       <div class="scan-status" id="scanStatusLog"></div>
-      <div class="scan-result" id="scanResultLog">
-        <div class="scan-result-name" id="scanResultNameLog"></div>
-        <div class="scan-result-macros" id="scanResultMacrosLog"></div>
-        <div class="scan-result-notes" id="scanResultNotesLog"></div>
-        <button class="settings-save" style="margin-top:12px;" onclick="window.addScannedMealLog()">Add to Today</button>
+      <div class="scan-result" id="scanResultLog" style="display:none;">
+        <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">AI Estimate — edit if needed</div>
+        <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Meal name</label>
+        <input type="text" id="scanEditName" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:10px;outline:none;"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Calories</label><input type="number" id="scanEditCal" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+          <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Protein (g)</label><input type="number" id="scanEditProt" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Carbs (g)</label><input type="number" id="scanEditCarb" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+          <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Fats (g)</label><input type="number" id="scanEditFat" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+        </div>
+        <div id="scanResultNotesLog" style="font-size:11.5px;color:var(--text-dim);margin-bottom:14px;"></div>
+        <button class="settings-save" style="margin:0;" onclick="window.addScannedMealLog()">Add to Today</button>
       </div>
     </div>
   </div>
 
   <!-- HISTORY -->
   <div class="screen" id="screen-history">
-    <div class="page-header">
-      <div class="page-eyebrow">TRACKED</div>
-      <div class="page-title">History</div>
-      <div class="page-date">Last 30 days</div>
-    </div>
+    <div class="page-header"><div class="page-eyebrow">TRACKED</div><div class="page-title">History</div><div class="page-date">Last 30 days</div></div>
     <div class="history-list" id="historyList"></div>
   </div>
 
   <!-- TRENDS -->
   <div class="screen" id="screen-trends">
-    <div class="page-header">
-      <div class="page-eyebrow">7-DAY VIEW</div>
-      <div class="page-title">Trends</div>
-    </div>
+    <div class="page-header"><div class="page-eyebrow">7-DAY VIEW</div><div class="page-title">Trends</div></div>
     <div class="trends-wrap">
-      <div class="chart-card">
-        <div class="chart-title">Calories</div>
-        <div class="chart-sub">Daily intake vs target · Green = hit</div>
-        <div class="bar-chart" id="calChart"></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Protein</div>
-        <div class="chart-sub">Daily grams vs target</div>
-        <div class="bar-chart" id="protChart"></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Water</div>
-        <div class="chart-sub">Glasses per day vs goal</div>
-        <div class="bar-chart" id="waterChart"></div>
-      </div>
+      <div class="chart-card"><div class="chart-title">Calories</div><div class="chart-sub">Daily intake vs target</div><div class="bar-chart" id="calChart"></div></div>
+      <div class="chart-card"><div class="chart-title">Protein</div><div class="chart-sub">Daily grams vs target</div><div class="bar-chart" id="protChart"></div></div>
+      <div class="chart-card"><div class="chart-title">Water</div><div class="chart-sub">Glasses per day vs goal</div><div class="bar-chart" id="waterChart"></div></div>
     </div>
   </div>
 
   <!-- SETTINGS -->
   <div class="screen" id="screen-settings">
-    <div class="page-header">
-      <div class="page-eyebrow">TRACKED</div>
-      <div class="page-title">Settings</div>
-    </div>
+    <div class="page-header"><div class="page-eyebrow">TRACKED</div><div class="page-title">Settings</div></div>
     <div class="settings-wrap">
       <div class="settings-section">
         <div class="settings-section-title">Daily Macro Targets</div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Calories</div><div class="settings-row-sub">kcal per day</div></div>
-          <input class="settings-input" id="setCal" type="number" value="2865"/>
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Protein</div><div class="settings-row-sub">grams per day</div></div>
-          <input class="settings-input" id="setProt" type="number" value="183"/>
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Carbs</div><div class="settings-row-sub">grams per day</div></div>
-          <input class="settings-input" id="setCarb" type="number" value="300"/>
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Fats</div><div class="settings-row-sub">grams per day</div></div>
-          <input class="settings-input" id="setFat" type="number" value="80"/>
-        </div>
+        <div class="settings-row"><div><div class="settings-row-label">Calories</div><div class="settings-row-sub">kcal per day</div></div><input class="settings-input" id="setCal" type="number" value="2865"/></div>
+        <div class="settings-row"><div><div class="settings-row-label">Protein</div><div class="settings-row-sub">grams per day</div></div><input class="settings-input" id="setProt" type="number" value="183"/></div>
+        <div class="settings-row"><div><div class="settings-row-label">Carbs</div><div class="settings-row-sub">grams per day</div></div><input class="settings-input" id="setCarb" type="number" value="300"/></div>
+        <div class="settings-row"><div><div class="settings-row-label">Fats</div><div class="settings-row-sub">grams per day</div></div><input class="settings-input" id="setFat" type="number" value="80"/></div>
       </div>
       <div class="settings-section">
         <div class="settings-section-title">Water Goal</div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Daily glasses</div><div class="settings-row-sub">1 glass = 250ml</div></div>
-          <input class="settings-input" id="setWater" type="number" value="8"/>
-        </div>
+        <div class="settings-row"><div><div class="settings-row-label">Daily glasses</div><div class="settings-row-sub">1 glass = 250ml</div></div><input class="settings-input" id="setWater" type="number" value="8"/></div>
       </div>
       <div class="settings-section">
         <div class="settings-section-title">Carryover</div>
-        <div class="settings-row">
-          <div><div class="settings-row-label">Carry missed calories</div><div class="settings-row-sub">Add yesterday's deficit to today's target</div></div>
-          <input type="checkbox" id="setCarryover" style="width:20px;height:20px;accent-color:var(--accent);"/>
-        </div>
+        <div class="settings-row"><div><div class="settings-row-label">Carry missed calories</div><div class="settings-row-sub">Add yesterday's deficit to today's target</div></div><input type="checkbox" id="setCarryover" style="width:20px;height:20px;accent-color:var(--accent);"/></div>
       </div>
     </div>
     <button class="settings-save" onclick="window.saveSettings()">Save Settings</button>
@@ -306,51 +215,72 @@
 <!-- BOTTOM TAB BAR -->
 <div class="tab-bar">
   <div class="tab-indicator" id="tabIndicator"></div>
-  <button class="tab-btn active" data-tab="today" onclick="window.showTab('today',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today
-  </button>
-  <button class="tab-btn" data-tab="log" onclick="window.showTab('log',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Log
-  </button>
-  <button class="tab-btn" data-tab="history" onclick="window.showTab('history',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>History
-  </button>
-  <button class="tab-btn" data-tab="trends" onclick="window.showTab('trends',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends
-  </button>
-  <button class="tab-btn" data-tab="settings" onclick="window.showTab('settings',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings
-  </button>
+  <button class="tab-btn active" data-tab="today" onclick="window.showTab('today',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today</button>
+  <button class="tab-btn" data-tab="log" onclick="window.showTab('log',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Log</button>
+  <button class="tab-btn" data-tab="history" onclick="window.showTab('history',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>History</button>
+  <button class="tab-btn" data-tab="trends" onclick="window.showTab('trends',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends</button>
+  <button class="tab-btn" data-tab="settings" onclick="window.showTab('settings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings</button>
 </div>
 
-<!-- LOG MODAL -->
+<!-- FOOD DETAIL MODAL -->
+<div class="modal-overlay" id="foodDetailModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="fdName"></div>
+    <div class="fd-macros-row" id="fdMacros"></div>
+    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Serving size (g)</label>
+    <input type="number" id="fdServing" value="100" oninput="window.updateFoodDetail()" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:14px;outline:none;"/>
+    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Category</label>
+    <select id="fdCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:16px;outline:none;">
+      <option value="breakfast">Breakfast</option>
+      <option value="lunch">Lunch</option>
+      <option value="dinner">Dinner</option>
+      <option value="snacks">Snacks</option>
+      <option value="drinks">Drinks</option>
+    </select>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="window.closeModal('foodDetailModal')">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="window.addFoodFromDetail()">Add to Today</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MEAL MODAL -->
+<div class="modal-overlay" id="editMealModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Meal</div>
+    <div class="edit-meal-name" id="editMealName"></div>
+    <div class="edit-meal-macros" id="editMealMacros"></div>
+    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Serving size (g)</label>
+    <input type="number" id="editMealServing" value="100" oninput="window.updateEditMacros()" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:12px;outline:none;"/>
+    <div class="edit-preview" id="editMealPreview"></div>
+    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Move to category</label>
+    <select id="editMealCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:16px;outline:none;">
+      <option value="breakfast">Breakfast</option>
+      <option value="lunch">Lunch</option>
+      <option value="dinner">Dinner</option>
+      <option value="snacks">Snacks</option>
+      <option value="drinks">Drinks</option>
+    </select>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="window.closeModal('editMealModal')">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="window.saveEditMeal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG MODAL (quick search from today) -->
 <div class="modal-overlay" id="logModal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Add to Today</div>
-    <label>Category</label>
-    <select id="logCat">
-      <option value="breakfast">🍳 Breakfast</option>
-      <option value="snack1">🥜 Snack 1</option>
-      <option value="lunch">🍗 Lunch</option>
-      <option value="snack2">🫙 Snack 2</option>
-      <option value="dinner">🌯 Dinner</option>
-    </select>
-    <label>Search food</label>
+    <div class="modal-title">Search Food</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <input type="text" id="logModalSearch" placeholder="chicken breast..." style="margin-bottom:0;flex:1;" autocomplete="off"/>
+      <input type="text" id="logModalSearch" placeholder="chicken breast..." style="margin-bottom:0;flex:1;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;" autocomplete="off"/>
       <button style="background:var(--accent);color:#fff;border:none;border-radius:12px;padding:0 14px;font-weight:700;font-size:13px;" onclick="window.doModalSearch()">Go</button>
     </div>
     <div id="logModalResults" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
-    <div id="logModalSelectedWrap" style="display:none;">
-      <div class="selected-preview" id="logModalSelected"></div>
-      <label>Serving (g)</label>
-      <input type="number" id="logModalServing" value="100" oninput="window.updateModalServing()"/>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="window.closeModal('logModal')">Cancel</button>
-      <button class="modal-btn modal-btn-save" onclick="window.saveLogMeal()">Add Meal</button>
-    </div>
+    <button class="modal-btn modal-btn-cancel" style="width:100%;" onclick="window.closeModal('logModal')">Cancel</button>
   </div>
 </div>
 
@@ -359,18 +289,19 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Create Food</div>
-    <label>Name</label><input type="text" id="cfName" placeholder="e.g. Nada protein milk"/>
-    <label>Icon (emoji)</label><input type="text" id="cfIcon" placeholder="🥛"/>
-    <label>Serving size (g or ml)</label><input type="number" id="cfServing" placeholder="100"/>
-    <div class="modal-grid">
-      <div><label>Calories</label><input type="number" id="cfCal" placeholder="0"/></div>
-      <div><label>Protein (g)</label><input type="number" id="cfProt" placeholder="0"/></div>
+    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Name</label>
+    <input type="text" id="cfName" placeholder="e.g. Nada protein milk" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:14px;outline:none;"/>
+    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Serving size (g)</label>
+    <input type="number" id="cfServing" placeholder="100" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:14px;outline:none;"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Calories</label><input type="number" id="cfCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Protein (g)</label><input type="number" id="cfProt" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
     </div>
-    <div class="modal-grid">
-      <div><label>Carbs (g)</label><input type="number" id="cfCarb" placeholder="0"/></div>
-      <div><label>Fats (g)</label><input type="number" id="cfFat" placeholder="0"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Carbs (g)</label><input type="number" id="cfCarb" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Fats (g)</label><input type="number" id="cfFat" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
     </div>
-    <div class="modal-actions">
+    <div class="modal-actions" style="margin-top:16px;">
       <button class="modal-btn modal-btn-cancel" onclick="window.closeModal('createFoodModal')">Cancel</button>
       <button class="modal-btn modal-btn-save" onclick="window.saveCustomFood()">Save Food</button>
     </div>
@@ -379,68 +310,6 @@
 
 <script type="module" src="app.js"></script>
 <script>
-// AI Scan functions (inline since they need DOM access)
-window.handleScanImageLog = function(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const preview = document.getElementById('scanPreviewLog');
-    preview.src = e.target.result;
-    preview.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-};
-
-window.analyzeMealLog = async function() {
-  const input = document.getElementById('scanImageInputLog');
-  const weight = document.getElementById('scanWeightLog').value.trim();
-  const status = document.getElementById('scanStatusLog');
-  if (!input.files[0]) { status.textContent = 'Please select a photo first.'; return; }
-  status.textContent = 'Analyzing with AI...';
-  document.getElementById('scanResultLog').style.display = 'none';
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const base64 = e.target.result.split(',')[1];
-    const mediaType = input.files[0].type || 'image/jpeg';
-    const weightText = weight ? ` The total weight of the meal is approximately ${weight}.` : '';
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64, mediaType, weight })
-      });
-      const result = await response.json();
-      if (result.error) throw new Error(result.error);
-      status.textContent = '';
-      document.getElementById('scanResultLog').style.display = 'block';
-      document.getElementById('scanResultNameLog').textContent = result.name;
-      document.getElementById('scanResultMacrosLog').textContent = `${result.cal} kcal · P:${result.prot}g · C:${result.carb}g · F:${result.fat}g`;
-      document.getElementById('scanResultNotesLog').textContent = result.notes || '';
-      window._scanResultLog = { ...result, cat: document.getElementById('scanCatLog').value };
-    } catch (e) {
-      status.textContent = 'Analysis failed. Please try again.';
-    }
-  };
-  reader.readAsDataURL(input.files[0]);
-};
-
-window.addScannedMealLog = function() {
-  if (!window._scanResultLog) return;
-  // Use the global addMealToToday from app.js
-  window._pendingMeal = {
-    cat: document.getElementById('scanCatLog').value,
-    name: window._scanResultLog.name,
-    icon: '📷',
-    cal: window._scanResultLog.cal,
-    prot: window._scanResultLog.prot,
-    carb: window._scanResultLog.carb,
-    fat: window._scanResultLog.fat,
-    ts: Date.now()
-  };
-  window.addPendingMeal();
-};
-
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
 }
