@@ -6,37 +6,58 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { image, mediaType, weight } = req.body;
-  if (!image) return res.status(400).json({ error: 'No image provided' });
+  const { images, description } = req.body;
+  if ((!images || !images.length) && !description) {
+    return res.status(400).json({ error: 'Provide at least a photo or description' });
+  }
 
-  const weightText = weight ? ` The total weight of the meal is approximately ${weight}.` : '';
+  const descText = description ? ` Additional context: ${description}.` : '';
+  const promptText = `Analyze this meal and estimate nutritional content.${descText} Respond ONLY with a JSON object, no markdown: {"name":"meal name","cal":0,"prot":0,"carb":0,"fat":0,"notes":"brief accuracy note"}`;
+
+  const content = [];
+  if (images && images.length) {
+    for (const img of images) {
+      if (img.data && img.data.length > 0) {
+        content.push({
+          type: 'image',
+          source: { type: 'base64', media_type: img.mediaType || 'image/jpeg', data: img.data }
+        });
+      }
+    }
+  }
+  content.push({ type: 'text', text: promptText });
+
+  // If no valid images and no description, use text only
+  if (content.length === 1 && !description) {
+    return res.status(400).json({ error: 'No valid image data received' });
+  }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': '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',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image } },
-            { type: 'text', text: `Analyze this meal photo and estimate the nutritional content.${weightText} Respond ONLY with a JSON object, no other text, no markdown: {"name":"meal name","cal":0,"prot":0,"carb":0,"fat":0,"notes":"brief accuracy note"}` }
-          ]
-        }]
+        messages: [{ role: 'user', content }]
       })
     });
-    const data = await response.json();
+
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text();
+      return res.status(500).json({ error: 'Claude API error: ' + errText });
+    }
+
+    const data = await anthropicRes.json();
     const text = data.content?.[0]?.text || '';
     const clean = text.replace(/```json|```/g, '').trim();
     const result = JSON.parse(clean);
     res.status(200).json(result);
   } catch (e) {
-    res.status(500).json({ error: 'Analysis failed' });
+    res.status(500).json({ error: 'Analysis failed: ' + e.message });
   }
 }
