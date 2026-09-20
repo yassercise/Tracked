@@ -13,7 +13,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const USER_ID = 'yasser-tracked';
-const API_KEY = 'TeEmaa4OORqOHUIyKV81auP3wh12QsDPqQxUK4F2';
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
 function todayKey() { return new Date().toISOString().split('T')[0]; }
@@ -31,7 +30,6 @@ let todayData = { meals: [], water: 0, date: todayKey() };
 let selectedFoodPer100 = null;
 let modalSelectedFood = null;
 let allFoods = [];
-let currentLogTab = 'search';
 
 // ─── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
@@ -45,10 +43,8 @@ async function init() {
   document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long'
   });
-  // Keyboard search shortcut
   document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') window.doSearch(); });
   document.getElementById('logModalSearch').addEventListener('keydown', e => { if (e.key === 'Enter') window.doModalSearch(); });
-  // Close modals on backdrop click
   document.querySelectorAll('.modal-overlay').forEach(o => {
     o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
   });
@@ -59,7 +55,7 @@ async function loadSettings() {
   try {
     const snap = await getDoc(settingsRef());
     if (snap.exists()) TARGETS = { ...TARGETS, ...snap.data() };
-  } catch (e) { console.warn('Settings load failed', e); }
+  } catch (e) {}
   applySettingsToUI();
 }
 
@@ -68,8 +64,7 @@ async function loadToday() {
   try {
     const snap = await getDoc(dayRef(key));
     todayData = snap.exists() ? snap.data() : { meals: [], water: 0, date: key };
-  } catch (e) { console.warn('Today load failed', e); }
-
+  } catch (e) {}
   if (TARGETS.carryover) {
     try {
       const snap = await getDoc(dayRef(dateKey(-1)));
@@ -91,11 +86,11 @@ async function loadFoods() {
   try {
     const snap = await getDocs(foodsCol());
     allFoods = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (e) { console.warn('Foods load failed', e); }
+  } catch (e) {}
 }
 
 async function saveToday() {
-  try { await setDoc(dayRef(todayKey()), todayData); } catch (e) { console.warn('Save failed', e); }
+  try { await setDoc(dayRef(todayKey()), todayData); } catch (e) {}
 }
 
 // ─── TOTALS ────────────────────────────────────────────────────────────────
@@ -111,7 +106,6 @@ function getTodayTotals() {
 function renderToday() {
   const t = getTodayTotals();
   const targetCal = TARGETS.cal + (todayData._carryover || 0);
-
   document.getElementById('mCal').innerHTML = t.cal.toLocaleString();
   document.getElementById('mProt').innerHTML = t.prot + '<span>g</span>';
   document.getElementById('mCarb').innerHTML = t.carb + '<span>g</span>';
@@ -125,7 +119,6 @@ function renderToday() {
   document.getElementById('mCarbBar').style.width = Math.min(100, Math.round(t.carb / TARGETS.carb * 100)) + '%';
   document.getElementById('mFatBar').style.width = Math.min(100, Math.round(t.fat / TARGETS.fat * 100)) + '%';
   document.getElementById('heroCalLabel').textContent = t.cal.toLocaleString() + ' / ' + targetCal.toLocaleString() + ' kcal';
-
   renderMeals();
   drawBody();
 }
@@ -136,10 +129,8 @@ function renderMeals() {
   (todayData.meals || []).forEach(m => {
     if (groups[m.cat]) groups[m.cat].push(m); else groups.dinner.push(m);
   });
-
   const con = document.getElementById('mealsContainer');
   con.innerHTML = '';
-
   let hasAny = false;
   Object.entries(groups).forEach(([cat, items]) => {
     if (!items.length) return;
@@ -165,7 +156,6 @@ function renderMeals() {
     });
     con.appendChild(group);
   });
-
   if (!hasAny) {
     con.innerHTML = `<div class="empty-state">
       <div class="empty-state-icon">🍽</div>
@@ -195,9 +185,9 @@ function renderWater() {
   const container = document.getElementById('waterDots');
   container.innerHTML = '';
   for (let i = 0; i < goal; i++) {
-    const dot = document.createElement('div');
+    const dot = document.createElement('button');
     dot.className = 'water-dot' + (i < current ? ' filled' : '');
-    dot.textContent = '💧';
+    dot.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="' + (i < current ? '#12141A' : 'none') + '" stroke="#12141A" stroke-width="2"><path d="M12 2C12 2 5 10 5 15a7 7 0 0014 0C19 10 12 2 12 2z"/></svg>';
     dot.onclick = () => window.toggleWater(i);
     container.appendChild(dot);
   }
@@ -216,25 +206,19 @@ function drawBody() {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
-
   const t = getTodayTotals();
   const targetCal = TARGETS.cal + (todayData._carryover || 0);
   const calPct = Math.min(1, t.cal / targetCal);
   const protPct = Math.min(1, t.prot / TARGETS.prot);
-
   const physique = calPct < 0.3 ? 0 : calPct < 0.6 ? 1 : protPct > 0.7 ? (protPct > 0.9 ? 3 : 2) : 1;
   const tags = ['DEPLETED', 'LEAN', 'ATHLETIC', 'JACKED'];
   document.getElementById('bodyStatusTag').textContent = tags[physique];
-
   const fillY = H - (H * calPct * 0.85);
-
   ctx.save();
   buildBodyPath(ctx, W, H, physique);
   ctx.clip();
-
   ctx.fillStyle = 'rgba(18,20,26,0.06)';
   ctx.fillRect(0, 0, W, H);
-
   const grad = ctx.createLinearGradient(0, H, 0, 0);
   if (physique >= 2) {
     grad.addColorStop(0, 'rgba(22,168,99,0.9)');
@@ -246,7 +230,6 @@ function drawBody() {
   }
   ctx.fillStyle = grad;
   ctx.fillRect(0, fillY, W, H - fillY);
-
   const shimmer = ctx.createLinearGradient(0, fillY - 4, 0, fillY + 4);
   shimmer.addColorStop(0, 'transparent');
   shimmer.addColorStop(0.5, physique >= 2 ? 'rgba(22,168,99,0.8)' : 'rgba(255,255,255,0.4)');
@@ -254,14 +237,12 @@ function drawBody() {
   ctx.fillStyle = shimmer;
   ctx.fillRect(0, fillY - 4, W, 8);
   ctx.restore();
-
   ctx.save();
   buildBodyPath(ctx, W, H, physique);
   ctx.strokeStyle = physique >= 2 ? 'rgba(22,168,99,0.6)' : 'rgba(18,20,26,0.15)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.restore();
-
   if (physique === 3) {
     ctx.save();
     buildBodyPath(ctx, W, H, physique);
@@ -282,7 +263,6 @@ function buildBodyPath(ctx, W, H, physique) {
   const shoulderY = neckBot + 8, chestY = shoulderY + 30 * scale;
   const waistY = shoulderY + 70, hipY = waistY + 22;
   const thighY = hipY + 50 * scale, kneeY = thighY + 30, calfBot = kneeY + 50 * scale;
-
   ctx.beginPath();
   ctx.arc(cx, headY, headR, 0, Math.PI * 2);
   ctx.closePath();
@@ -314,10 +294,7 @@ window.showTab = function(tab, btn) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab-btn, .sidebar-item').forEach(b => b.classList.remove('active'));
   document.getElementById('screen-' + tab).classList.add('active');
-
-  // Activate both tab bar button and sidebar item
   document.querySelectorAll('[data-tab="' + tab + '"]').forEach(el => el.classList.add('active'));
-
   if (btn && btn.classList.contains('tab-btn')) updateTabIndicator(btn);
   if (tab === 'history') renderHistory();
   if (tab === 'trends') renderTrends();
@@ -335,18 +312,46 @@ function updateTabIndicator(btn) {
   ind.style.width = rect.width + 'px';
 }
 
-// ─── LOG TABS ──────────────────────────────────────────────────────────────
 window.switchLogTab = function(tab) {
-  currentLogTab = tab;
   document.querySelectorAll('.log-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['search', 'myfoods', 'manual'][i] === tab);
+    t.classList.toggle('active', ['search', 'myfoods', 'manual', 'scan'][i] === tab);
   });
-  document.getElementById('logTabSearch').style.display = tab === 'search' ? 'block' : 'none';
-  document.getElementById('logTabMyfoods').style.display = tab === 'myfoods' ? 'block' : 'none';
-  document.getElementById('logTabManual').style.display = tab === 'manual' ? 'block' : 'none';
+  ['logTabSearch', 'logTabMyfoods', 'logTabManual', 'logTabScan'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const tabMap = { search: 'logTabSearch', myfoods: 'logTabMyfoods', manual: 'logTabManual', scan: 'logTabScan' };
+  const target = document.getElementById(tabMap[tab]);
+  if (target) target.style.display = 'block';
 };
 
 // ─── FOOD SEARCH ───────────────────────────────────────────────────────────
+// API Ninjas returns data already scaled to the query (100g default)
+// Fields: calories, protein_g, carbohydrates_total_g, fat_total_g, serving_size_g
+function parseItem(item) {
+  const serving = parseFloat(item.serving_size_g) || 100;
+  const cal = parseFloat(item.calories) || 0;
+  const prot = parseFloat(item.protein_g) || 0;
+  const carb = parseFloat(item.carbohydrates_total_g) || 0;
+  const fat = parseFloat(item.fat_total_g) || 0;
+  // Values are already for the serving size — convert to per-100g for scaling
+  return {
+    name: item.name,
+    serving,
+    per100: {
+      cal: Math.round(cal / serving * 100),
+      prot: Math.round(prot / serving * 100),
+      carb: Math.round(carb / serving * 100),
+      fat: Math.round(fat / serving * 100),
+    },
+    // Display values at default serving
+    cal: Math.round(cal),
+    prot: Math.round(prot),
+    carb: Math.round(carb),
+    fat: Math.round(fat),
+  };
+}
+
 async function fetchNutrition(q) {
   const res = await fetch('/api/search?query=' + encodeURIComponent(q));
   const data = await res.json();
@@ -365,13 +370,13 @@ window.doSearch = async function() {
     spinner.classList.remove('active');
     if (!items.length) { results.innerHTML = '<div class="search-empty">No results. Try a different term.</div>'; return; }
     items.forEach(item => {
+      const p = parseItem(item);
       const div = document.createElement('div');
       div.className = 'search-result-item';
-      const serving = Math.round(item.serving_size_g || 100);
-      div.innerHTML = `<div class="search-result-name">${item.name}</div><div class="search-result-meta">${Math.round(item.calories)} kcal · P:${Math.round(item.protein_g)}g · C:${Math.round(item.carbohydrates_total_g)}g · F:${Math.round(item.fat_total_g)}g (per ${serving}g)</div>`;
+      div.innerHTML = `<div class="search-result-name">${p.name}</div><div class="search-result-meta">${p.cal} kcal · P:${p.prot}g · C:${p.carb}g · F:${p.fat}g (per ${p.serving}g)</div>`;
       div.onclick = () => {
         openLogModal();
-        setTimeout(() => { document.getElementById('logModalSearch').value = item.name; selectModalFood(item); }, 150);
+        setTimeout(() => { document.getElementById('logModalSearch').value = p.name; selectModalFood(item); }, 150);
         showTab('today', document.querySelector('[data-tab="today"]'));
       };
       results.appendChild(div);
@@ -392,11 +397,11 @@ window.doModalSearch = async function() {
     results.innerHTML = '';
     if (!items.length) { results.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-faint);font-size:13px;">No results</div>'; return; }
     items.slice(0, 6).forEach(item => {
+      const p = parseItem(item);
       const div = document.createElement('div');
       div.className = 'search-result-item';
       div.style.marginBottom = '4px';
-      const serving = Math.round(item.serving_size_g || 100);
-      div.innerHTML = `<div class="search-result-name">${item.name}</div><div class="search-result-meta">${Math.round(item.calories)} kcal · P:${Math.round(item.protein_g)}g (per ${serving}g)</div>`;
+      div.innerHTML = `<div class="search-result-name">${p.name}</div><div class="search-result-meta">${p.cal} kcal · P:${p.prot}g · C:${p.carb}g · F:${p.fat}g (per ${p.serving}g)</div>`;
       div.onclick = () => selectModalFood(item);
       results.appendChild(div);
     });
@@ -406,16 +411,11 @@ window.doModalSearch = async function() {
 };
 
 function selectModalFood(item) {
-  const serving = Math.round(item.serving_size_g || 100);
-  selectedFoodPer100 = {
-    name: item.name,
-    cal: Math.round(item.calories / serving * 100),
-    prot: Math.round(item.protein_g / serving * 100),
-    carb: Math.round(item.carbohydrates_total_g / serving * 100),
-    fat: Math.round(item.fat_total_g / serving * 100),
-  };
+  const p = parseItem(item);
+  selectedFoodPer100 = p.per100;
+  selectedFoodPer100.name = p.name;
   document.getElementById('logModalResults').innerHTML = '';
-  document.getElementById('logModalServing').value = serving;
+  document.getElementById('logModalServing').value = p.serving;
   document.getElementById('logModalSelectedWrap').style.display = 'block';
   window.updateModalServing();
 }
@@ -432,6 +432,91 @@ window.updateModalServing = function() {
   document.getElementById('logModalSelected').innerHTML = `
     <div class="selected-preview-name">${f.name} (${g}g)</div>
     <div class="selected-preview-meta">${modalSelectedFood.cal} kcal · P:${modalSelectedFood.prot}g · C:${modalSelectedFood.carb}g · F:${modalSelectedFood.fat}g</div>`;
+};
+
+// ─── AI MEAL SCANNER ───────────────────────────────────────────────────────
+window.openScanModal = function() {
+  document.getElementById('scanModal').classList.add('open');
+  document.getElementById('scanResult').style.display = 'none';
+  document.getElementById('scanPreview').style.display = 'none';
+  document.getElementById('scanStatus').textContent = '';
+  document.getElementById('scanWeight').value = '';
+  document.getElementById('scanImageInput').value = '';
+};
+
+window.handleScanImage = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('scanPreview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.analyzeMeal = async function() {
+  const input = document.getElementById('scanImageInput');
+  const weight = document.getElementById('scanWeight').value.trim();
+  const status = document.getElementById('scanStatus');
+  if (!input.files[0]) { status.textContent = 'Please select a photo first.'; return; }
+  status.textContent = 'Analyzing meal...';
+  document.getElementById('scanResult').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    const mediaType = input.files[0].type || 'image/jpeg';
+    const weightText = weight ? ` The total weight of the meal is approximately ${weight}g.` : '';
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'text', text: `Analyze this meal photo and estimate the nutritional content.${weightText} Respond ONLY with a JSON object in this exact format, no other text: {"name":"meal name","cal":0,"prot":0,"carb":0,"fat":0,"notes":"brief note about accuracy"}` }
+            ]
+          }]
+        })
+      });
+      const data = await response.json();
+      const text = data.content?.[0]?.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      const result = JSON.parse(clean);
+      status.textContent = '';
+      document.getElementById('scanResult').style.display = 'block';
+      document.getElementById('scanResultName').textContent = result.name;
+      document.getElementById('scanResultMacros').textContent = `${result.cal} kcal · P:${result.prot}g · C:${result.carb}g · F:${result.fat}g`;
+      document.getElementById('scanResultNotes').textContent = result.notes || '';
+      // Store for adding
+      window._scanResult = result;
+    } catch (e) {
+      status.textContent = 'Analysis failed. Try again.';
+    }
+  };
+  reader.readAsDataURL(input.files[0]);
+};
+
+window.addScannedMeal = async function() {
+  if (!window._scanResult) return;
+  const cat = document.getElementById('scanCat').value;
+  const meal = {
+    cat, name: window._scanResult.name, icon: '📷',
+    cal: window._scanResult.cal, prot: window._scanResult.prot,
+    carb: window._scanResult.carb, fat: window._scanResult.fat,
+    ts: Date.now()
+  };
+  todayData.meals = [...(todayData.meals || []), meal];
+  await saveToday();
+  renderToday();
+  window.closeModal('scanModal');
+  showTab('today', document.querySelector('[data-tab="today"]'));
 };
 
 // ─── MY FOODS ──────────────────────────────────────────────────────────────
@@ -474,7 +559,7 @@ window.deleteSavedFood = async function(id) {
     await deleteDoc(doc(db, 'tracked', USER_ID, 'foods', id));
     allFoods = allFoods.filter(f => f.id !== id);
     renderMyFoods();
-  } catch (e) { console.warn('Delete failed', e); }
+  } catch (e) {}
 };
 
 window.saveCustomFood = async function() {
@@ -493,7 +578,7 @@ window.saveCustomFood = async function() {
     allFoods.push({ id: ref.id, ...food });
     renderMyFoods();
     window.closeModal('createFoodModal');
-  } catch (e) { console.warn('Create food failed', e); }
+  } catch (e) {}
 };
 
 // ─── MANUAL MEAL ───────────────────────────────────────────────────────────
@@ -544,37 +629,58 @@ async function renderHistory() {
     const key = dateKey(-i);
     try {
       const snap = await getDoc(dayRef(key));
-      if (snap.exists() && (snap.data().meals || []).length) results.push({ key, ...snap.data() });
+      if (snap.exists()) {
+        const d = snap.data();
+        if ((d.meals || []).length || (d.water || 0) > 0) results.push({ key, ...d });
+      }
     } catch (e) {}
   }
-  if (!results.length) { list.innerHTML = '<div class="search-empty">No history yet. Start logging today!</div>'; return; }
+  if (!results.length) {
+    list.innerHTML = '<div class="search-empty">No history yet.<br>Start logging today!</div>';
+    return;
+  }
   list.innerHTML = '';
   results.forEach(day => {
     const meals = day.meals || [];
-    const t = meals.reduce((a, m) => { a.cal += m.cal||0; a.prot += m.prot||0; a.carb += m.carb||0; a.fat += m.fat||0; return a; }, { cal:0,prot:0,carb:0,fat:0 });
+    const t = meals.reduce((a, m) => { a.cal+=m.cal||0; a.prot+=m.prot||0; a.carb+=m.carb||0; a.fat+=m.fat||0; return a; }, {cal:0,prot:0,carb:0,fat:0});
     const hitCal = t.cal >= TARGETS.cal * 0.9;
     const hitProt = t.prot >= TARGETS.prot * 0.9;
     const badge = hitCal && hitProt ? 'hit' : (hitCal || hitProt ? 'partial' : 'miss');
     const badgeText = { hit: '✓ On Target', partial: '~ Partial', miss: '✗ Missed' }[badge];
-    const d = new Date(day.key);
+    const d = new Date(day.key + 'T12:00:00');
     const dateStr = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    const calPct = Math.min(100, Math.round(t.cal / TARGETS.cal * 100));
+    const protPct = Math.min(100, Math.round(t.prot / TARGETS.prot * 100));
     const el = document.createElement('div');
     el.className = 'history-day';
     el.innerHTML = `
       <div class="history-day-head" onclick="this.nextElementSibling.classList.toggle('open')">
-        <div class="history-day-date">${dateStr}</div>
+        <div>
+          <div class="history-day-date">${dateStr}</div>
+          <div class="history-day-cal">${t.cal} kcal · ${meals.length} meal${meals.length !== 1 ? 's' : ''}</div>
+        </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <div class="history-day-cal">${t.cal} kcal</div>
           <div class="history-day-badge badge-${badge}">${badgeText}</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         </div>
       </div>
       <div class="history-day-detail">
-        <div class="history-macro-row"><span class="history-macro-label">Calories</span><span class="history-macro-val">${t.cal} / ${TARGETS.cal}</span></div>
-        <div class="history-macro-row"><span class="history-macro-label">Protein</span><span class="history-macro-val">${t.prot}g / ${TARGETS.prot}g</span></div>
+        <div class="history-progress-row">
+          <div class="history-progress-item">
+            <div class="history-progress-label">Calories</div>
+            <div class="history-progress-bar"><div class="history-progress-fill" style="width:${calPct}%;background:var(--accent)"></div></div>
+            <div class="history-progress-val">${t.cal} / ${TARGETS.cal}</div>
+          </div>
+          <div class="history-progress-item">
+            <div class="history-progress-label">Protein</div>
+            <div class="history-progress-bar"><div class="history-progress-fill" style="width:${protPct}%;background:var(--blue)"></div></div>
+            <div class="history-progress-val">${t.prot}g / ${TARGETS.prot}g</div>
+          </div>
+        </div>
         <div class="history-macro-row"><span class="history-macro-label">Carbs</span><span class="history-macro-val">${t.carb}g / ${TARGETS.carb}g</span></div>
         <div class="history-macro-row"><span class="history-macro-label">Fats</span><span class="history-macro-val">${t.fat}g / ${TARGETS.fat}g</span></div>
-        <div class="history-macro-row"><span class="history-macro-label">Water</span><span class="history-macro-val">${day.water || 0} glasses</span></div>
-        <div class="history-macro-row"><span class="history-macro-label">Meals logged</span><span class="history-macro-val">${meals.length}</span></div>
+        <div class="history-macro-row"><span class="history-macro-label">Water</span><span class="history-macro-val">${day.water || 0} / ${TARGETS.water} glasses</span></div>
+        ${meals.map(m => `<div class="history-meal-row"><span class="history-meal-icon">${m.icon||'🍽'}</span><span class="history-meal-name">${m.name}</span><span class="history-meal-cal">${m.cal} kcal</span></div>`).join('')}
       </div>`;
     list.appendChild(el);
   });
@@ -607,7 +713,7 @@ function renderBarChart(id, days, key, target, color) {
   const max = Math.max(target * 1.1, ...days.map(d => d[key]), 1);
   days.forEach(d => {
     const pct = Math.round(d[key] / max * 100);
-    const hitColor = d[key] >= target * 0.9 ? 'rgba(22,168,99,0.8)' : color;
+    const hitColor = d[key] >= target * 0.9 ? 'rgba(22,168,99,0.85)' : color;
     const col = document.createElement('div');
     col.className = 'bar-col';
     col.innerHTML = `
@@ -654,3 +760,13 @@ window.openCreateFoodModal = function() {
 
 // ─── BOOT ──────────────────────────────────────────────────────────────────
 init();
+
+// ─── PENDING MEAL (for AI scanner) ─────────────────────────────────────────
+window.addPendingMeal = async function() {
+  if (!window._pendingMeal) return;
+  todayData.meals = [...(todayData.meals || []), window._pendingMeal];
+  await saveToday();
+  renderToday();
+  window._pendingMeal = null;
+  showTab('today', document.querySelector('[data-tab="today"]'));
+};

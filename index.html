@@ -15,6 +15,37 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
+<style>
+/* History extras */
+.history-day-cal { font-size: 12px; color: var(--text-dim); font-weight: 600; margin-top: 2px; }
+.history-progress-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--card-border); }
+.history-progress-item {}
+.history-progress-label { font-size: 11px; font-weight: 700; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+.history-progress-bar { height: 5px; background: var(--card-border); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+.history-progress-fill { height: 100%; border-radius: 3px; transition: width 600ms cubic-bezier(0.16,1,0.3,1); }
+.history-progress-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); font-weight: 600; }
+.history-meal-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--card-border); }
+.history-meal-row:last-child { border-bottom: none; }
+.history-meal-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
+.history-meal-name { flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-dim); }
+.history-meal-cal { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 600; color: var(--text); }
+
+/* Water dot as button */
+.water-dot { background: none; border: 1.5px solid var(--card-border); cursor: pointer; }
+
+/* Scan modal */
+.scan-upload-area { border: 1.5px dashed var(--card-border); border-radius: 16px; padding: 28px; text-align: center; cursor: pointer; margin-bottom: 14px; transition: border-color 200ms ease; background: var(--bg); }
+.scan-upload-area:hover { border-color: var(--accent); }
+.scan-upload-area input { display: none; }
+.scan-upload-icon { font-size: 32px; margin-bottom: 8px; }
+.scan-upload-label { font-size: 13px; font-weight: 600; color: var(--text-dim); }
+.scan-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 14px; display: none; }
+.scan-status { font-size: 13px; color: var(--text-dim); text-align: center; margin-bottom: 10px; min-height: 20px; }
+.scan-result { background: var(--green-bg); border: 1px solid rgba(22,168,99,0.25); border-radius: 14px; padding: 14px; margin-bottom: 14px; display: none; }
+.scan-result-name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 4px; text-transform: capitalize; }
+.scan-result-macros { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--green); font-weight: 600; margin-bottom: 6px; }
+.scan-result-notes { font-size: 11.5px; color: var(--text-dim); }
+</style>
 </head>
 <body>
 
@@ -27,24 +58,19 @@
   <div class="sidebar-rail-label">Menu</div>
   <nav class="sidebar-nav">
     <button class="sidebar-item active" data-tab="today" onclick="window.showTab('today',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      Today
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today
     </button>
     <button class="sidebar-item" data-tab="log" onclick="window.showTab('log',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
-      Log Meal
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>Log Meal
     </button>
     <button class="sidebar-item" data-tab="history" onclick="window.showTab('history',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>
-      History
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>History
     </button>
     <button class="sidebar-item" data-tab="trends" onclick="window.showTab('trends',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>
-      Trends
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends
     </button>
     <button class="sidebar-item" data-tab="settings" onclick="window.showTab('settings',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>
-      Settings
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings
     </button>
   </nav>
 </aside>
@@ -58,8 +84,7 @@
       <div class="page-title" id="todayTitle">Today</div>
       <div class="page-date" id="todayDate"></div>
     </div>
-
-    <div class="body-hero" id="bodyHero">
+    <div class="body-hero">
       <div class="scan-line"></div>
       <div class="body-hero-top">
         <div class="body-hero-label">Body Status</div>
@@ -70,7 +95,6 @@
         <div class="body-status-tag" id="bodyStatusTag">LOADING...</div>
       </div>
     </div>
-
     <div class="macro-grid">
       <div class="macro-card">
         <div class="macro-label">Calories</div>
@@ -97,24 +121,20 @@
         <div class="macro-bar"><div class="macro-fill fill-fat" id="mFatBar" style="width:0%"></div></div>
       </div>
     </div>
-
     <div class="glow-line"></div>
-
     <div class="water-card">
       <div class="water-head">
-        <div class="water-title">💧 Water</div>
+        <div class="water-title">Water</div>
         <div class="water-val" id="waterVal">0 / 8 glasses</div>
       </div>
       <div class="water-dots" id="waterDots"></div>
     </div>
-
     <div id="carryoverBanner" style="display:none">
       <div class="carryover-banner">
         <div style="font-size:18px">↩️</div>
         <div class="carryover-text" id="carryoverText"></div>
       </div>
     </div>
-
     <div class="section-head">
       <div class="section-title">Meals</div>
       <button class="section-add" onclick="window.openLogModal()">+</button>
@@ -132,8 +152,8 @@
       <button class="log-tab active" onclick="window.switchLogTab('search')">Search</button>
       <button class="log-tab" onclick="window.switchLogTab('myfoods')">My Foods</button>
       <button class="log-tab" onclick="window.switchLogTab('manual')">Manual</button>
+      <button class="log-tab" onclick="window.switchLogTab('scan')">📷 AI Scan</button>
     </div>
-
     <div id="logTabSearch">
       <div class="search-wrap">
         <div class="search-box">
@@ -141,19 +161,15 @@
           <button class="search-btn" onclick="window.doSearch()">Search</button>
         </div>
       </div>
-      <div style="padding:0 20px 12px;text-align:center;">
-        <div class="search-spinner" id="searchSpinner"></div>
-      </div>
+      <div style="padding:0 20px 12px;text-align:center;"><div class="search-spinner" id="searchSpinner"></div></div>
       <div class="search-results" id="searchResults"></div>
     </div>
-
     <div id="logTabMyfoods" style="display:none">
       <div style="padding:16px 20px 10px;display:flex;justify-content:flex-end;">
         <button onclick="window.openCreateFoodModal()" style="background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;font-family:'Manrope',sans-serif;">+ Create Food</button>
       </div>
       <div class="my-foods-list" id="myFoodsList"></div>
     </div>
-
     <div id="logTabManual" style="display:none;padding:16px 20px;">
       <label>Category</label>
       <select id="manualCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
@@ -177,6 +193,33 @@
       </div>
       <button class="settings-save" onclick="window.saveManualMeal()">Add to Today</button>
     </div>
+    <div id="logTabScan" style="display:none;padding:16px 20px;">
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;font-weight:600;">Take a photo of your meal and Claude AI will estimate the macros.</p>
+      <label class="scan-upload-area" for="scanImageInputLog">
+        <input type="file" id="scanImageInputLog" accept="image/*" capture="environment" onchange="window.handleScanImageLog(this)"/>
+        <div class="scan-upload-icon">📷</div>
+        <div class="scan-upload-label">Tap to take photo or upload</div>
+      </label>
+      <img class="scan-preview" id="scanPreviewLog" alt="meal preview"/>
+      <label>Approximate weight (optional)</label>
+      <input type="text" id="scanWeightLog" placeholder="e.g. 300g or leave blank" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;"/>
+      <label>Category</label>
+      <select id="scanCatLog" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
+        <option value="breakfast">🍳 Breakfast</option>
+        <option value="snack1">🥜 Snack 1</option>
+        <option value="lunch">🍗 Lunch</option>
+        <option value="snack2">🫙 Snack 2</option>
+        <option value="dinner">🌯 Dinner</option>
+      </select>
+      <button class="settings-save" style="margin:0 0 14px;" onclick="window.analyzeMealLog()">Analyze with AI</button>
+      <div class="scan-status" id="scanStatusLog"></div>
+      <div class="scan-result" id="scanResultLog">
+        <div class="scan-result-name" id="scanResultNameLog"></div>
+        <div class="scan-result-macros" id="scanResultMacrosLog"></div>
+        <div class="scan-result-notes" id="scanResultNotesLog"></div>
+        <button class="settings-save" style="margin-top:12px;" onclick="window.addScannedMealLog()">Add to Today</button>
+      </div>
+    </div>
   </div>
 
   <!-- HISTORY -->
@@ -184,6 +227,7 @@
     <div class="page-header">
       <div class="page-eyebrow">TRACKED</div>
       <div class="page-title">History</div>
+      <div class="page-date">Last 30 days</div>
     </div>
     <div class="history-list" id="historyList"></div>
   </div>
@@ -197,7 +241,7 @@
     <div class="trends-wrap">
       <div class="chart-card">
         <div class="chart-title">Calories</div>
-        <div class="chart-sub">Daily intake vs target</div>
+        <div class="chart-sub">Daily intake vs target · Green = hit</div>
         <div class="bar-chart" id="calChart"></div>
       </div>
       <div class="chart-card">
@@ -257,30 +301,25 @@
     <button class="settings-save" onclick="window.saveSettings()">Save Settings</button>
   </div>
 
-</div><!-- end .main -->
+</div>
 
-<!-- BOTTOM TAB BAR (mobile) -->
+<!-- BOTTOM TAB BAR -->
 <div class="tab-bar">
   <div class="tab-indicator" id="tabIndicator"></div>
   <button class="tab-btn active" data-tab="today" onclick="window.showTab('today',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-    Today
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today
   </button>
   <button class="tab-btn" data-tab="log" onclick="window.showTab('log',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
-    Log
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Log
   </button>
   <button class="tab-btn" data-tab="history" onclick="window.showTab('history',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>
-    History
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>History
   </button>
   <button class="tab-btn" data-tab="trends" onclick="window.showTab('trends',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>
-    Trends
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends
   </button>
   <button class="tab-btn" data-tab="settings" onclick="window.showTab('settings',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>
-    Settings
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings
   </button>
 </div>
 
@@ -320,12 +359,9 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Create Food</div>
-    <label>Name</label>
-    <input type="text" id="cfName" placeholder="e.g. Nada protein milk"/>
-    <label>Icon (emoji)</label>
-    <input type="text" id="cfIcon" placeholder="🥛"/>
-    <label>Serving size (g or ml)</label>
-    <input type="number" id="cfServing" placeholder="100"/>
+    <label>Name</label><input type="text" id="cfName" placeholder="e.g. Nada protein milk"/>
+    <label>Icon (emoji)</label><input type="text" id="cfIcon" placeholder="🥛"/>
+    <label>Serving size (g or ml)</label><input type="number" id="cfServing" placeholder="100"/>
     <div class="modal-grid">
       <div><label>Calories</label><input type="number" id="cfCal" placeholder="0"/></div>
       <div><label>Protein (g)</label><input type="number" id="cfProt" placeholder="0"/></div>
@@ -343,9 +379,83 @@
 
 <script type="module" src="app.js"></script>
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
-  }
+// AI Scan functions (inline since they need DOM access)
+window.handleScanImageLog = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('scanPreviewLog');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.analyzeMealLog = async function() {
+  const input = document.getElementById('scanImageInputLog');
+  const weight = document.getElementById('scanWeightLog').value.trim();
+  const status = document.getElementById('scanStatusLog');
+  if (!input.files[0]) { status.textContent = 'Please select a photo first.'; return; }
+  status.textContent = 'Analyzing with AI...';
+  document.getElementById('scanResultLog').style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    const mediaType = input.files[0].type || 'image/jpeg';
+    const weightText = weight ? ` The total weight of the meal is approximately ${weight}.` : '';
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'text', text: `Analyze this meal photo and estimate the nutritional content.${weightText} Respond ONLY with a JSON object, no other text, no markdown: {"name":"meal name","cal":0,"prot":0,"carb":0,"fat":0,"notes":"brief accuracy note"}` }
+            ]
+          }]
+        })
+      });
+      const data = await response.json();
+      const text = data.content?.[0]?.text || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      const result = JSON.parse(clean);
+      status.textContent = '';
+      document.getElementById('scanResultLog').style.display = 'block';
+      document.getElementById('scanResultNameLog').textContent = result.name;
+      document.getElementById('scanResultMacrosLog').textContent = `${result.cal} kcal · P:${result.prot}g · C:${result.carb}g · F:${result.fat}g`;
+      document.getElementById('scanResultNotesLog').textContent = result.notes || '';
+      window._scanResultLog = { ...result, cat: document.getElementById('scanCatLog').value };
+    } catch (e) {
+      status.textContent = 'Analysis failed. Please try again.';
+    }
+  };
+  reader.readAsDataURL(input.files[0]);
+};
+
+window.addScannedMealLog = function() {
+  if (!window._scanResultLog) return;
+  // Use the global addMealToToday from app.js
+  window._pendingMeal = {
+    cat: document.getElementById('scanCatLog').value,
+    name: window._scanResultLog.name,
+    icon: '📷',
+    cal: window._scanResultLog.cal,
+    prot: window._scanResultLog.prot,
+    carb: window._scanResultLog.carb,
+    fat: window._scanResultLog.fat,
+    ts: Date.now()
+  };
+  window.addPendingMeal();
+};
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
+}
 </script>
 </body>
 </html>
