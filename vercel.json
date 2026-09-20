@@ -6,5 +6,10 @@
     "api/search.js": {
       "maxDuration": 10
     }
+  },
+  "api": {
+    "bodyParser": {
+      "sizeLimit": "10mb"
+    }
   }
 }
