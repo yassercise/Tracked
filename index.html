@@ -22,7 +22,10 @@
 
 <!-- DESKTOP SIDEBAR -->
 <aside class="sidebar">
-  <div class="sidebar-wordmark">TRACKED<span>FOOD & MACROS</span></div>
+  <div class="sidebar-wordmark" style="display:flex;align-items:center;gap:10px;">
+    <img src="logo.png" alt="Tracked" style="width:36px;height:36px;object-fit:contain;"/>
+    <div>TRACKED<span style="display:block;font-size:11px;color:var(--text-faint);letter-spacing:0.12em;margin-top:2px;font-family:'JetBrains Mono',monospace;font-weight:500;">FOOD & MACROS</span></div>
+  </div>
   <div class="sidebar-rail-label">Menu</div>
   <nav class="sidebar-nav">
     <button class="sidebar-item active" data-tab="home" onclick="window.showTab('home',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Home</button>
@@ -36,9 +39,9 @@
 
   <!-- HOME -->
   <div class="screen active" id="screen-home">
-    <div class="page-header">
-      <div class="page-eyebrow">TRACKED</div>
-      <div class="page-title">Home</div>
+    <div class="page-header" style="text-align:center;padding-top:16px;padding-bottom:4px;">
+      <img src="logo.png" alt="Tracked" style="width:48px;height:48px;object-fit:contain;margin-bottom:6px;"/>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;letter-spacing:-0.01em;">TRACKED</div>
     </div>
 
     <!-- Month strip -->
@@ -94,7 +97,7 @@
 
     <!-- Water -->
     <div class="water-card">
-      <div class="water-head"><div class="water-title">Water</div><div class="water-val" id="waterVal">0 / 8 glasses</div></div>
+      <div class="water-head"><div class="water-title">Water</div><div class="water-val" id="waterVal">0 / 8 × 300ml</div></div>
       <div class="water-dots" id="waterDots"></div>
     </div>
   </div>
@@ -142,6 +145,8 @@
       </select>
       <label>Meal name</label>
       <input type="text" id="manualName" placeholder="e.g. Grilled salmon" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
+      <label>Brand / Source (optional)</label>
+      <input type="text" id="manualSource" placeholder="e.g. Homemade, McDonald's, Nada..." style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
         <div><label>Calories</label><input type="number" id="manualCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
         <div><label>Protein (g)</label><input type="number" id="manualProt" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
@@ -161,7 +166,7 @@
           <input type="file" id="scanImageInputLog" accept="image/*" multiple style="display:none;" onchange="window.handleScanImages(this)"/>
           <div style="font-size:11px;font-weight:700;color:var(--text-faint);">+ Photo</div>
         </label>
-        <div id="scanThumbnails" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        <div id="scanThumbnails" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;"></div>
       </div>
       <label>Description</label>
       <textarea id="scanDescLog" placeholder="e.g. 200g grilled chicken with olive oil, 100g broccoli..." style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;resize:none;min-height:72px;"></textarea>
@@ -174,6 +179,7 @@
       <div class="scan-result" id="scanResultLog" style="display:none;">
         <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">AI Estimate — edit if needed</div>
         <label>Meal name</label><input type="text" id="scanEditName" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:10px;outline:none;"/>
+        <label>Brand / Source (optional)</label><input type="text" id="scanEditSource" placeholder="e.g. Homemade, Nada, McDonald's..." style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:10px;outline:none;"/>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
           <div><label>Calories</label><input type="number" id="scanEditCal" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
           <div><label>Protein (g)</label><input type="number" id="scanEditProt" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
@@ -183,6 +189,9 @@
           <div><label>Fats (g)</label><input type="number" id="scanEditFat" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
         </div>
         <div id="scanResultNotesLog" style="font-size:11px;color:var(--text-dim);margin-bottom:12px;"></div>
+        <label>Feedback / Correction</label>
+        <textarea id="scanFeedback" placeholder="e.g. Actually looks more like 200g, not 350g. Also has extra cheese." style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:13px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:10px;outline:none;resize:none;min-height:60px;"></textarea>
+        <button class="modal-btn modal-btn-cancel" style="width:100%;margin-bottom:10px;" onclick="window.reanalyzeMeal()">Re-analyze with feedback</button>
         <button class="settings-save" style="margin:0;" onclick="window.addScannedMealLog()">Add to Today</button>
       </div>
     </div>
@@ -211,7 +220,7 @@
       </div>
       <div class="settings-section">
         <div class="settings-section-title">Water Goal</div>
-        <div class="settings-row"><div><div class="settings-row-label">Daily glasses</div><div class="settings-row-sub">1 glass = 250ml</div></div><input class="settings-input" id="setWater" type="number" value="8"/></div>
+        <div class="settings-row"><div><div class="settings-row-label">Daily glasses</div><div class="settings-row-sub">1 unit = 300ml</div></div><input class="settings-input" id="setWater" type="number" value="8"/></div>
       </div>
       <div class="settings-section">
         <div class="settings-section-title">Carryover</div>
@@ -300,6 +309,7 @@
     <div class="modal-handle"></div>
     <div class="modal-title">Create Food</div>
     <label>Name</label><input type="text" id="cfName" placeholder="e.g. Nada protein milk" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
+    <label>Brand / Source (optional)</label><input type="text" id="cfSource" placeholder="e.g. Nada, Homemade..." style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
     <label>Serving size (g)</label><input type="number" id="cfServing" placeholder="100" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
     <div class="modal-grid">
       <div><label>Calories</label><input type="number" id="cfCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>

@@ -202,7 +202,7 @@ function renderWater() {
   const key = dateStr(offsetDate(currentDayOffset));
   const d = dayCache[key]||{water:0};
   const goal = T.water||8, current = d.water||0;
-  document.getElementById('waterVal').textContent = current+' / '+goal+' glasses';
+  document.getElementById('waterVal').textContent = (current*300)+'ml / '+(goal*300)+'ml';
   const con = document.getElementById('waterDots'); con.innerHTML='';
   for (let i=0;i<goal;i++) {
     const btn = document.createElement('button');
@@ -322,12 +322,13 @@ window.removeMeal = async function(idx) {
 };
 
 // ── WATER ──────────────────────────────────────────────────────────────────
-window.toggleWater = async function(idx) {
+window.toggleWater = function(idx) {
   haptic(8); soundWater();
   const key = dateStr(offsetDate(currentDayOffset));
   if (!dayCache[key]) dayCache[key]={meals:[],water:0,date:key};
   dayCache[key].water = idx < (dayCache[key].water||0) ? idx : idx+1;
-  await saveDay(key); renderWater();
+  renderWater(); // instant UI update
+  saveDay(key); // fire and forget
 };
 
 // ── BODY CANVAS ────────────────────────────────────────────────────────────
@@ -534,18 +535,22 @@ window.deleteSavedFood=async function(id){
 
 window.saveCustomFood=async function(){
   const name=document.getElementById('cfName').value.trim();if(!name)return;
-  const food={name,serving:parseInt(document.getElementById('cfServing').value)||100,cal:parseInt(document.getElementById('cfCal').value)||0,prot:parseInt(document.getElementById('cfProt').value)||0,carb:parseInt(document.getElementById('cfCarb').value)||0,fat:parseInt(document.getElementById('cfFat').value)||0};
+  const source=document.getElementById('cfSource')?.value.trim()||'';
+  const fullName=source?name+' ('+source+')':name;
+  const food={name:fullName,serving:parseInt(document.getElementById('cfServing').value)||100,cal:parseInt(document.getElementById('cfCal').value)||0,prot:parseInt(document.getElementById('cfProt').value)||0,carb:parseInt(document.getElementById('cfCarb').value)||0,fat:parseInt(document.getElementById('cfFat').value)||0};
   try{const ref=await addDoc(foodsCol(),food);allFoods.push({id:ref.id,...food});renderMyFoods();closeModalSwipe('createFoodModal');haptic(10);}catch(e){}
 };
 
 // ── MANUAL MEAL ────────────────────────────────────────────────────────────
 window.saveManualMeal=async function(){
   const name=document.getElementById('manualName').value.trim();if(!name)return;
-  const meal={cat:document.getElementById('manualCat').value,name,cal:parseInt(document.getElementById('manualCal').value)||0,prot:parseInt(document.getElementById('manualProt').value)||0,carb:parseInt(document.getElementById('manualCarb').value)||0,fat:parseInt(document.getElementById('manualFat').value)||0,serving:100,baseServing:100,ts:Date.now()};
+  const source=document.getElementById('manualSource')?.value.trim()||'';
+  const fullName=source?name+' ('+source+')':name;
+  const meal={cat:document.getElementById('manualCat').value,name:fullName,cal:parseInt(document.getElementById('manualCal').value)||0,prot:parseInt(document.getElementById('manualProt').value)||0,carb:parseInt(document.getElementById('manualCarb').value)||0,fat:parseInt(document.getElementById('manualFat').value)||0,serving:100,baseServing:100,ts:Date.now()};
   meal.baseCal=meal.cal;meal.baseProt=meal.prot;meal.baseCarb=meal.carb;meal.baseFat=meal.fat;
   await addMealToDay(meal);
   window.showTab('home',document.querySelector('[data-tab="home"]'));
-  ['manualName','manualCal','manualProt','manualCarb','manualFat'].forEach(id=>document.getElementById(id).value='');
+  ['manualName','manualSource','manualCal','manualProt','manualCarb','manualFat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 };
 
 // ── MODAL SEARCH ───────────────────────────────────────────────────────────
@@ -635,13 +640,43 @@ function compressImage(file,maxW,q) {
 window.handleScanImages=async function(input){
   const files=Array.from(input.files).slice(0,4);
   const thumbs=document.getElementById('scanThumbnails');thumbs.innerHTML='';window._scanImages=[];
-  for(const file of files){
-    const c=await compressImage(file,800,0.7);
+  for(let i=0;i<files.length;i++){
+    const c=await compressImage(files[i],800,0.7);
     window._scanImages.push({data:c.data,mediaType:c.mediaType});
+    const wrap=document.createElement('div');wrap.style.cssText='position:relative;width:72px;height:72px;flex-shrink:0;';
     const img=document.createElement('img');img.src=c.preview;
     img.style.cssText='width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid var(--card-border);';
-    thumbs.appendChild(img);
+    const xBtn=document.createElement('button');
+    xBtn.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#12141A;color:white;border:none;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;line-height:1;';
+    xBtn.textContent='×';
+    const idx=i;
+    xBtn.onclick=()=>{window._scanImages.splice(idx,1);wrap.remove();};
+    wrap.appendChild(img);wrap.appendChild(xBtn);thumbs.appendChild(wrap);
   }
+};
+
+window.reanalyzeMeal=async function(){
+  const feedback=document.getElementById('scanFeedback').value.trim();
+  if(!feedback){alert('Please write your feedback first.');return;}
+  const currentName=document.getElementById('scanEditName').value;
+  const currentCal=document.getElementById('scanEditCal').value;
+  const currentProt=document.getElementById('scanEditProt').value;
+  const status=document.getElementById('scanStatusLog');
+  status.textContent='Re-analyzing with your feedback...';
+  try{
+    const response=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({images:window._scanImages,description:`Previous estimate: ${currentName}, ${currentCal} kcal, ${currentProt}g protein. User feedback: ${feedback}. Please re-estimate based on this correction.`})});
+    if(!response.ok)throw new Error('Server error');
+    const result=await response.json();if(result.error)throw new Error(result.error);
+    status.textContent='';
+    document.getElementById('scanEditName').value=result.name;
+    document.getElementById('scanEditCal').value=result.cal;
+    document.getElementById('scanEditProt').value=result.prot;
+    document.getElementById('scanEditCarb').value=result.carb;
+    document.getElementById('scanEditFat').value=result.fat;
+    document.getElementById('scanResultNotesLog').textContent=result.notes||'';
+    document.getElementById('scanFeedback').value='';
+    soundLog();haptic(15);
+  }catch(e){status.textContent='Re-analysis failed: '+e.message;}
 };
 
 window.analyzeMealLog=async function(){
@@ -662,7 +697,9 @@ window.analyzeMealLog=async function(){
 };
 
 window.addScannedMealLog=async function(){
-  const meal={cat:document.getElementById('scanCatLog').value,name:document.getElementById('scanEditName').value||'Scanned meal',cal:parseInt(document.getElementById('scanEditCal').value)||0,prot:parseInt(document.getElementById('scanEditProt').value)||0,carb:parseInt(document.getElementById('scanEditCarb').value)||0,fat:parseInt(document.getElementById('scanEditFat').value)||0,serving:100,baseServing:100,ts:Date.now()};
+  const source=document.getElementById('scanEditSource')?.value.trim()||'';
+  const name=document.getElementById('scanEditName').value||'Scanned meal';
+  const meal={cat:document.getElementById('scanCatLog').value,name:source?name+' ('+source+')':name,cal:parseInt(document.getElementById('scanEditCal').value)||0,prot:parseInt(document.getElementById('scanEditProt').value)||0,carb:parseInt(document.getElementById('scanEditCarb').value)||0,fat:parseInt(document.getElementById('scanEditFat').value)||0,serving:100,baseServing:100,ts:Date.now()};
   meal.baseCal=meal.cal;meal.baseProt=meal.prot;meal.baseCarb=meal.carb;meal.baseFat=meal.fat;
   await addMealToDay(meal);window.showTab('home',document.querySelector('[data-tab="home"]'));
 };
