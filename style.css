@@ -341,3 +341,8 @@ body {
 .goal-banner-text { font-size: 13px; color: var(--green); font-weight: 700; }
 
 button { cursor: pointer; }
+
+/* Hide mobile-only logo header on desktop */
+@media (min-width: 768px) {
+  .mobile-only-header { display: none; }
+}
