@@ -536,7 +536,7 @@ function renderMyFoods() {
   list.innerHTML='';
   allFoods.forEach(food=>{
     const div=document.createElement('div');div.className='food-item';
-    div.innerHTML=`<div class="food-item-info" onclick="window.openFoodDetailFromSaved('${food.id}')"><div class="food-item-name">${food.name}</div><div class="food-item-meta">${food.cal} kcal · P:${food.prot}g · C:${food.carb}g · F:${food.fat}g · ${food.serving}g</div></div><button class="food-item-del" onclick="window.deleteSavedFood('${food.id}')">×</button>`;
+    div.innerHTML=`<div class="food-item-info" onclick="window.openFoodDetailFromSaved('${food.id}')"><div class="food-item-name">${food.name}</div><div class="food-item-meta">${food.cal} kcal · P:${food.prot}g · C:${food.carb}g · F:${food.fat}g · ${food.serving}g</div></div><button class="food-item-edit" onclick="window.openEditFood('${food.id}')">✎</button><button class="food-item-del" onclick="window.deleteSavedFood('${food.id}')">×</button>`;
     list.appendChild(div);
   });
 }
@@ -555,7 +555,22 @@ window.saveCustomFood=async function(){
   const source=document.getElementById('cfSource')?.value.trim()||'';
   const fullName=source?name+' ('+source+')':name;
   const food={name:fullName,serving:parseInt(document.getElementById('cfServing').value)||100,cal:parseInt(document.getElementById('cfCal').value)||0,prot:parseInt(document.getElementById('cfProt').value)||0,carb:parseInt(document.getElementById('cfCarb').value)||0,fat:parseInt(document.getElementById('cfFat').value)||0};
-  try{const ref=await addDoc(foodsCol(),food);allFoods.push({id:ref.id,...food});renderMyFoods();closeModalSwipe('createFoodModal');haptic(10);}catch(e){}
+  const editId=document.getElementById('createFoodModal').dataset.editId;
+  try{
+    if(editId){
+      // Edit existing
+      await setDoc(doc(db,'tracked',UID,'foods',editId),food);
+      const idx=allFoods.findIndex(f=>f.id===editId);
+      if(idx>-1)allFoods[idx]={id:editId,...food};
+    } else {
+      // Create new
+      const ref=await addDoc(foodsCol(),food);
+      allFoods.push({id:ref.id,...food});
+    }
+    renderMyFoods();closeModalSwipe('createFoodModal');haptic(10);
+    document.getElementById('createFoodModal').dataset.editId='';
+    document.getElementById('createFoodModalTitle').textContent='Create Food';
+  }catch(e){}
 };
 
 // ── MANUAL MEAL ────────────────────────────────────────────────────────────
@@ -721,7 +736,44 @@ window.addScannedMealLog=async function(){
   await addMealToDay(meal);window.showTab('home',document.querySelector('[data-tab="home"]'));
 };
 
-window.openCreateFoodModal=function(){['cfName','cfServing','cfCal','cfProt','cfCarb','cfFat'].forEach(i=>document.getElementById(i).value='');document.getElementById('createFoodModal').classList.add('open');};
+window.resetScan=function(){
+  window._scanImages=[];
+  document.getElementById('scanThumbnails').innerHTML='';
+  document.getElementById('scanDescLog').value='';
+  document.getElementById('scanStatusLog').textContent='';
+  document.getElementById('scanResultLog').style.display='none';
+  document.getElementById('scanFeedback') && (document.getElementById('scanFeedback').value='');
+  document.getElementById('scanImageInputLog').value='';
+  haptic(8);
+};
+
+window.resetManual=function(){
+  ['manualName','manualSource','manualCal','manualProt','manualCarb','manualFat'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  haptic(8);
+};
+
+window.openEditFood=function(id){
+  const food=allFoods.find(f=>f.id===id);if(!food)return;
+  document.getElementById('cfName').value=food.name||'';
+  document.getElementById('cfSource').value='';
+  document.getElementById('cfServing').value=food.serving||100;
+  document.getElementById('cfCal').value=food.cal||0;
+  document.getElementById('cfProt').value=food.prot||0;
+  document.getElementById('cfCarb').value=food.carb||0;
+  document.getElementById('cfFat').value=food.fat||0;
+  document.getElementById('createFoodModal').dataset.editId=id;
+  document.getElementById('createFoodModalTitle').textContent='Edit Food';
+  document.getElementById('createFoodModal').classList.add('open');
+};
+
+window.openCreateFoodModal=function(){
+  ['cfName','cfSource','cfServing','cfCal','cfProt','cfCarb','cfFat'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  document.getElementById('createFoodModal').dataset.editId='';
+  document.getElementById('createFoodModalTitle').textContent='Create Food';
+  document.getElementById('createFoodModal').classList.add('open');
+};
 window.addPendingMeal=async function(){if(!window._pendingMeal)return;await addMealToDay(window._pendingMeal);window._pendingMeal=null;window.showTab('home',document.querySelector('[data-tab="home"]'));};
 
 init();

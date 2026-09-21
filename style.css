@@ -346,3 +346,6 @@ button { cursor: pointer; }
 @media (min-width: 768px) {
   .mobile-only-header { display: none; }
 }
+
+.food-item-edit { width:28px;height:28px;border-radius:50%;background:var(--blue-bg);color:var(--blue);border:none;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 200ms cubic-bezier(0.34,1.56,0.64,1);margin-left:4px; }
+.food-item-edit:active { transform:scale(0.8); }
