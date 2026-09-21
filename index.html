@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Tracked"/>
@@ -20,13 +20,13 @@
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
 
+<!-- DESKTOP SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-wordmark">TRACKED<span>FOOD & MACROS</span></div>
   <div class="sidebar-rail-label">Menu</div>
   <nav class="sidebar-nav">
-    <button class="sidebar-item active" data-tab="today" onclick="window.showTab('today',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today</button>
+    <button class="sidebar-item active" data-tab="home" onclick="window.showTab('home',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Home</button>
     <button class="sidebar-item" data-tab="log" onclick="window.showTab('log',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>Log Meal</button>
-    <button class="sidebar-item" data-tab="history" onclick="window.showTab('history',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>History</button>
     <button class="sidebar-item" data-tab="trends" onclick="window.showTab('trends',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends</button>
     <button class="sidebar-item" data-tab="settings" onclick="window.showTab('settings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings</button>
   </nav>
@@ -34,34 +34,65 @@
 
 <div class="main" id="mainScroll">
 
-  <!-- TODAY -->
-  <div class="screen active" id="screen-today">
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
     <div class="page-header">
       <div class="page-eyebrow">TRACKED</div>
-      <div class="page-title">Today</div>
-      <div class="page-date" id="todayDate"></div>
+      <div class="page-title">Home</div>
     </div>
-    <div class="body-hero">
+
+    <!-- Month strip -->
+    <div class="month-strip" id="monthStrip"></div>
+
+    <!-- Day nav -->
+    <div class="day-nav">
+      <button class="day-nav-btn" onclick="window.changeDay(-1)">‹</button>
+      <div class="day-nav-center">
+        <div class="day-nav-label" id="dayNavLabel">Today</div>
+        <div class="day-nav-sub" id="dayNavSub"></div>
+      </div>
+      <button class="day-nav-btn" id="dayNavNext" onclick="window.changeDay(1)">›</button>
+    </div>
+
+    <!-- Body hero -->
+    <div class="body-hero" style="margin-top:12px;">
       <div class="scan-line"></div>
       <div class="body-hero-top">
         <div class="body-hero-label">Body Status</div>
         <div class="body-hero-cal" id="heroCalLabel">0 / 2865 kcal</div>
       </div>
       <div class="body-canvas-wrap">
-        <canvas id="bodyCanvas" width="200" height="240"></canvas>
+        <canvas id="bodyCanvas" width="200" height="220"></canvas>
         <div class="body-status-tag" id="bodyStatusTag">LOADING...</div>
       </div>
     </div>
+
+    <!-- Goal banner -->
+    <div id="goalBanner" style="display:none" class="goal-banner">
+      <div class="goal-banner-text">Goal hit! Great work today.</div>
+    </div>
+
+    <!-- Macro grid -->
     <div class="macro-grid">
       <div class="macro-card"><div class="macro-label">Calories</div><div class="macro-val" id="mCal">0</div><div class="macro-target" id="mCalTarget">/ 2865</div><div class="macro-bar"><div class="macro-fill fill-cal" id="mCalBar" style="width:0%"></div></div></div>
       <div class="macro-card"><div class="macro-label">Protein</div><div class="macro-val" id="mProt">0<span>g</span></div><div class="macro-target" id="mProtTarget">/ 183g</div><div class="macro-bar"><div class="macro-fill fill-prot" id="mProtBar" style="width:0%"></div></div></div>
       <div class="macro-card"><div class="macro-label">Carbs</div><div class="macro-val" id="mCarb">0<span>g</span></div><div class="macro-target" id="mCarbTarget">/ 300g</div><div class="macro-bar"><div class="macro-fill fill-carb" id="mCarbBar" style="width:0%"></div></div></div>
       <div class="macro-card"><div class="macro-label">Fats</div><div class="macro-val" id="mFat">0<span>g</span></div><div class="macro-target" id="mFatTarget">/ 80g</div><div class="macro-bar"><div class="macro-fill fill-fat" id="mFatBar" style="width:0%"></div></div></div>
     </div>
+
     <div class="glow-line"></div>
-    <div id="carryoverBanner" style="display:none"><div class="carryover-banner"><div style="font-size:18px">↩</div><div class="carryover-text" id="carryoverText"></div></div></div>
-    <div class="section-head"><div class="section-title">Meals</div><button class="section-add" onclick="window.showTab('log',document.querySelector('[data-tab=log]'))">+</button></div>
+
+    <!-- Carryover -->
+    <div id="carryoverBanner" style="display:none"><div class="carryover-banner"><div class="carryover-text" id="carryoverText"></div></div></div>
+
+    <!-- Meals -->
+    <div class="section-head">
+      <div class="section-title">Meals</div>
+      <button class="section-add" onclick="window.showTab('log',document.querySelector('[data-tab=log]'))">+</button>
+    </div>
     <div id="mealsContainer"></div>
+
+    <!-- Water -->
     <div class="water-card">
       <div class="water-head"><div class="water-title">Water</div><div class="water-val" id="waterVal">0 / 8 glasses</div></div>
       <div class="water-dots" id="waterDots"></div>
@@ -74,114 +105,94 @@
       <div class="page-eyebrow">ADD FOOD</div>
       <div class="page-title">Log Meal</div>
     </div>
-    <!-- Persistent search + category -->
-    <div style="padding:0 20px 8px;display:flex;gap:8px;align-items:center;">
-      <select id="logCat" style="border:1px solid var(--card-border);border-radius:12px;padding:10px 12px;font-size:13px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;flex-shrink:0;">
+    <div class="log-search-bar">
+      <select id="logCat" class="log-cat-select">
         <option value="breakfast">Breakfast</option>
         <option value="lunch">Lunch</option>
         <option value="dinner">Dinner</option>
         <option value="snacks">Snacks</option>
         <option value="drinks">Drinks</option>
       </select>
+      <input class="log-search-input" id="searchInput" type="text" placeholder="Search food..." autocomplete="off"/>
+      <button class="log-search-btn" onclick="window.doSearch()">Go</button>
     </div>
-    <div class="search-wrap" style="padding-top:0;">
-      <div class="search-box">
-        <input class="search-input" id="searchInput" type="text" placeholder="Search food..." autocomplete="off"/>
-        <button class="search-btn" onclick="window.doSearch()">Search</button>
-      </div>
-    </div>
-    <div style="padding:0 20px 10px;text-align:center;"><div class="search-spinner" id="searchSpinner"></div></div>
+    <div style="text-align:center;padding:6px 20px 0;"><div class="search-spinner" id="searchSpinner"></div></div>
     <div class="search-results" id="searchResults"></div>
 
-    <div class="log-tabs" style="margin-top:4px;">
+    <div class="log-tabs" style="margin-top:8px;">
       <button class="log-tab active" onclick="window.switchLogTab('recent')">Recent</button>
       <button class="log-tab" onclick="window.switchLogTab('myfoods')">My Foods</button>
       <button class="log-tab" onclick="window.switchLogTab('manual')">Manual</button>
       <button class="log-tab" onclick="window.switchLogTab('scan')">AI Scan</button>
     </div>
 
-    <div id="logTabRecent"><div class="my-foods-list" id="recentList" style="padding:12px 20px;"></div></div>
+    <div id="logTabRecent"><div class="foods-list" id="recentList"></div></div>
 
     <div id="logTabMyfoods" style="display:none;">
-      <div style="padding:12px 20px 8px;display:flex;justify-content:flex-end;">
-        <button onclick="window.openCreateFoodModal()" style="background:var(--accent);color:#fff;border:none;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:700;font-family:'Manrope',sans-serif;">+ Create Food</button>
+      <div style="padding:10px 20px 0;display:flex;justify-content:flex-end;">
+        <button onclick="window.openCreateFoodModal()" style="background:var(--accent);color:#fff;border:none;border-radius:12px;padding:9px 14px;font-size:13px;font-weight:700;font-family:'Manrope',sans-serif;transition:transform 200ms cubic-bezier(0.34,1.56,0.64,1);">+ Create Food</button>
       </div>
-      <div class="my-foods-list" id="myFoodsList" style="padding:0 20px;"></div>
+      <div class="foods-list" id="myFoodsList"></div>
     </div>
 
-    <div id="logTabManual" style="display:none;padding:16px 20px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Category</label>
-      <select id="manualCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
-        <option value="breakfast">Breakfast</option>
-        <option value="lunch">Lunch</option>
-        <option value="dinner">Dinner</option>
-        <option value="snacks">Snacks</option>
-        <option value="drinks">Drinks</option>
+    <div id="logTabManual" style="display:none;padding:14px 20px;">
+      <label>Category</label>
+      <select id="manualCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;">
+        <option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snacks">Snacks</option><option value="drinks">Drinks</option>
       </select>
-      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Meal name</label>
-      <input type="text" id="manualName" placeholder="e.g. Grilled salmon" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;"/>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Calories</label><input type="number" id="manualCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
-        <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Protein (g)</label><input type="number" id="manualProt" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+      <label>Meal name</label>
+      <input type="text" id="manualName" placeholder="e.g. Grilled salmon" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div><label>Calories</label><input type="number" id="manualCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+        <div><label>Protein (g)</label><input type="number" id="manualProt" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;">
-        <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Carbs (g)</label><input type="number" id="manualCarb" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
-        <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Fats (g)</label><input type="number" id="manualFat" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+        <div><label>Carbs (g)</label><input type="number" id="manualCarb" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+        <div><label>Fats (g)</label><input type="number" id="manualFat" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
       </div>
       <button class="settings-save" onclick="window.saveManualMeal()">Add to Today</button>
     </div>
 
-    <div id="logTabScan" style="display:none;padding:16px 20px;">
-      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;font-weight:600;">Add photos and/or describe your meal. At least one is required.</p>
-      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">Photos (up to 4)</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-        <label for="scanImageInputLog" style="width:72px;height:72px;border:1.5px dashed var(--card-border);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:var(--bg);flex-shrink:0;">
+    <div id="logTabScan" style="display:none;padding:14px 20px;">
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;font-weight:600;">Add photos and/or describe your meal. At least one is required.</p>
+      <label>Photos (up to 4)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <label for="scanImageInputLog" class="scan-upload-box" style="width:72px;height:72px;min-height:unset;padding:0;flex-direction:column;">
           <input type="file" id="scanImageInputLog" accept="image/*" multiple style="display:none;" onchange="window.handleScanImages(this)"/>
           <div style="font-size:11px;font-weight:700;color:var(--text-faint);">+ Photo</div>
         </label>
         <div id="scanThumbnails" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
       </div>
-      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Description</label>
-      <textarea id="scanDescLog" placeholder="e.g. 200g grilled chicken breast with olive oil, 100g broccoli..." style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;resize:none;min-height:80px;"></textarea>
-      <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Category</label>
-      <select id="scanCatLog" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:16px;outline:none;">
-        <option value="breakfast">Breakfast</option>
-        <option value="lunch">Lunch</option>
-        <option value="dinner">Dinner</option>
-        <option value="snacks">Snacks</option>
-        <option value="drinks">Drinks</option>
+      <label>Description</label>
+      <textarea id="scanDescLog" placeholder="e.g. 200g grilled chicken with olive oil, 100g broccoli..." style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;resize:none;min-height:72px;"></textarea>
+      <label>Category</label>
+      <select id="scanCatLog" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
+        <option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snacks">Snacks</option><option value="drinks">Drinks</option>
       </select>
-      <button class="settings-save" style="margin:0 0 14px;" onclick="window.analyzeMealLog()">Analyze with AI</button>
+      <button class="settings-save" style="margin:0 0 12px;" onclick="window.analyzeMealLog()">Analyze with AI</button>
       <div class="scan-status" id="scanStatusLog"></div>
       <div class="scan-result" id="scanResultLog" style="display:none;">
         <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">AI Estimate — edit if needed</div>
-        <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Meal name</label>
-        <input type="text" id="scanEditName" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:10px;outline:none;"/>
+        <label>Meal name</label><input type="text" id="scanEditName" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:10px;outline:none;"/>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Calories</label><input type="number" id="scanEditCal" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
-          <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Protein (g)</label><input type="number" id="scanEditProt" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+          <div><label>Calories</label><input type="number" id="scanEditCal" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+          <div><label>Protein (g)</label><input type="number" id="scanEditProt" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-          <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Carbs (g)</label><input type="number" id="scanEditCarb" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
-          <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Fats (g)</label><input type="number" id="scanEditFat" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div><label>Carbs (g)</label><input type="number" id="scanEditCarb" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+          <div><label>Fats (g)</label><input type="number" id="scanEditFat" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
         </div>
-        <div id="scanResultNotesLog" style="font-size:11.5px;color:var(--text-dim);margin-bottom:14px;"></div>
+        <div id="scanResultNotesLog" style="font-size:11px;color:var(--text-dim);margin-bottom:12px;"></div>
         <button class="settings-save" style="margin:0;" onclick="window.addScannedMealLog()">Add to Today</button>
       </div>
     </div>
-  </div>
-
-  <!-- HISTORY -->
-  <div class="screen" id="screen-history">
-    <div class="page-header"><div class="page-eyebrow">TRACKED</div><div class="page-title">History</div><div class="page-date">Last 30 days</div></div>
-    <div class="history-list" id="historyList"></div>
   </div>
 
   <!-- TRENDS -->
   <div class="screen" id="screen-trends">
     <div class="page-header"><div class="page-eyebrow">7-DAY VIEW</div><div class="page-title">Trends</div></div>
     <div class="trends-wrap">
-      <div class="chart-card"><div class="chart-title">Calories</div><div class="chart-sub">Daily intake vs target</div><div class="bar-chart" id="calChart"></div></div>
+      <div class="chart-card"><div class="chart-title">Calories</div><div class="chart-sub">Daily intake vs target · green = hit</div><div class="bar-chart" id="calChart"></div></div>
       <div class="chart-card"><div class="chart-title">Protein</div><div class="chart-sub">Daily grams vs target</div><div class="bar-chart" id="protChart"></div></div>
       <div class="chart-card"><div class="chart-title">Water</div><div class="chart-sub">Glasses per day vs goal</div><div class="bar-chart" id="waterChart"></div></div>
     </div>
@@ -212,14 +223,21 @@
 
 </div>
 
-<!-- BOTTOM TAB BAR -->
+<!-- LIQUID GLASS TAB BAR -->
 <div class="tab-bar">
-  <div class="tab-indicator" id="tabIndicator"></div>
-  <button class="tab-btn active" data-tab="today" onclick="window.showTab('today',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Today</button>
-  <button class="tab-btn" data-tab="log" onclick="window.showTab('log',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Log</button>
-  <button class="tab-btn" data-tab="history" onclick="window.showTab('history',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 109 9"/><path d="M3 3v6h6"/></svg>History</button>
-  <button class="tab-btn" data-tab="trends" onclick="window.showTab('trends',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends</button>
-  <button class="tab-btn" data-tab="settings" onclick="window.showTab('settings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings</button>
+  <div class="tab-pill" id="tabPill"></div>
+  <button class="tab-btn active" data-tab="home" onclick="window.showTab('home',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Home
+  </button>
+  <button class="tab-btn" data-tab="log" onclick="window.showTab('log',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Log
+  </button>
+  <button class="tab-btn" data-tab="trends" onclick="window.showTab('trends',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 18l5-5 4 4 5-6 4 3"/></svg>Trends
+  </button>
+  <button class="tab-btn" data-tab="settings" onclick="window.showTab('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 014.93 19.07M4.93 4.93a10 10 0 1014.14 14.14"/></svg>Settings
+  </button>
 </div>
 
 <!-- FOOD DETAIL MODAL -->
@@ -228,15 +246,11 @@
     <div class="modal-handle"></div>
     <div class="modal-title" id="fdName"></div>
     <div class="fd-macros-row" id="fdMacros"></div>
-    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Serving size (g)</label>
-    <input type="number" id="fdServing" value="100" oninput="window.updateFoodDetail()" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:14px;outline:none;"/>
-    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Category</label>
-    <select id="fdCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:16px;outline:none;">
-      <option value="breakfast">Breakfast</option>
-      <option value="lunch">Lunch</option>
-      <option value="dinner">Dinner</option>
-      <option value="snacks">Snacks</option>
-      <option value="drinks">Drinks</option>
+    <label>Serving size (g)</label>
+    <input type="number" id="fdServing" value="100" oninput="window.updateFoodDetail()" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
+    <label>Category</label>
+    <select id="fdCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
+      <option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snacks">Snacks</option><option value="drinks">Drinks</option>
     </select>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="window.closeModal('foodDetailModal')">Cancel</button>
@@ -252,16 +266,12 @@
     <div class="modal-title">Edit Meal</div>
     <div class="edit-meal-name" id="editMealName"></div>
     <div class="edit-meal-macros" id="editMealMacros"></div>
-    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Serving size (g)</label>
-    <input type="number" id="editMealServing" value="100" oninput="window.updateEditMacros()" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:12px;outline:none;"/>
+    <label>Serving size (g)</label>
+    <input type="number" id="editMealServing" value="100" oninput="window.updateEditMacros()" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
     <div class="edit-preview" id="editMealPreview"></div>
-    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">Move to category</label>
-    <select id="editMealCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:16px;outline:none;">
-      <option value="breakfast">Breakfast</option>
-      <option value="lunch">Lunch</option>
-      <option value="dinner">Dinner</option>
-      <option value="snacks">Snacks</option>
-      <option value="drinks">Drinks</option>
+    <label>Move to category</label>
+    <select id="editMealCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
+      <option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner">Dinner</option><option value="snacks">Snacks</option><option value="drinks">Drinks</option>
     </select>
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="window.closeModal('editMealModal')">Cancel</button>
@@ -270,16 +280,16 @@
   </div>
 </div>
 
-<!-- LOG MODAL (quick search from today) -->
+<!-- LOG MODAL -->
 <div class="modal-overlay" id="logModal">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Search Food</div>
     <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <input type="text" id="logModalSearch" placeholder="chicken breast..." style="margin-bottom:0;flex:1;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;" autocomplete="off"/>
+      <input type="text" id="logModalSearch" placeholder="chicken breast..." style="flex:1;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;" autocomplete="off"/>
       <button style="background:var(--accent);color:#fff;border:none;border-radius:12px;padding:0 14px;font-weight:700;font-size:13px;" onclick="window.doModalSearch()">Go</button>
     </div>
-    <div id="logModalResults" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
+    <div id="logModalResults" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-bottom:12px;"></div>
     <button class="modal-btn modal-btn-cancel" style="width:100%;" onclick="window.closeModal('logModal')">Cancel</button>
   </div>
 </div>
@@ -289,19 +299,17 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Create Food</div>
-    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Name</label>
-    <input type="text" id="cfName" placeholder="e.g. Nada protein milk" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:14px;outline:none;"/>
-    <label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Serving size (g)</label>
-    <input type="number" id="cfServing" placeholder="100" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);margin-bottom:14px;outline:none;"/>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-      <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Calories</label><input type="number" id="cfCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Protein (g)</label><input type="number" id="cfProt" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+    <label>Name</label><input type="text" id="cfName" placeholder="e.g. Nada protein milk" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
+    <label>Serving size (g)</label><input type="number" id="cfServing" placeholder="100" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
+    <div class="modal-grid">
+      <div><label>Calories</label><input type="number" id="cfCal" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+      <div><label>Protein (g)</label><input type="number" id="cfProt" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Carbs (g)</label><input type="number" id="cfCarb" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
-      <div><label style="font-size:11px;font-weight:700;color:var(--text-dim);display:block;margin-bottom:4px;">Fats (g)</label><input type="number" id="cfFat" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);outline:none;"/></div>
+    <div class="modal-grid">
+      <div><label>Carbs (g)</label><input type="number" id="cfCarb" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
+      <div><label>Fats (g)</label><input type="number" id="cfFat" placeholder="0" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
     </div>
-    <div class="modal-actions" style="margin-top:16px;">
+    <div class="modal-actions" style="margin-top:14px;">
       <button class="modal-btn modal-btn-cancel" onclick="window.closeModal('createFoodModal')">Cancel</button>
       <button class="modal-btn modal-btn-save" onclick="window.saveCustomFood()">Save Food</button>
     </div>
@@ -313,6 +321,21 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
 }
+// Init tab pill position after fonts load
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const btn = document.querySelector('.tab-btn.active');
+    if (btn && window.updateTabPill) window.updateTabPill(btn);
+    else {
+      const bar = document.querySelector('.tab-bar'), pill = document.getElementById('tabPill');
+      if (bar && pill && btn) {
+        const rect = btn.getBoundingClientRect(), barRect = bar.getBoundingClientRect();
+        pill.style.left = (rect.left - barRect.left + 4) + 'px';
+        pill.style.width = (rect.width - 8) + 'px';
+      }
+    }
+  }, 100);
+});
 </script>
 </body>
 </html>
