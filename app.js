@@ -370,7 +370,11 @@ window.showTab = function(tab, btn) {
   document.getElementById('screen-'+tab).classList.add('active');
   document.querySelectorAll('[data-tab="'+tab+'"]').forEach(el=>el.classList.add('active'));
   if (btn?.classList.contains('tab-btn')) updateTabPill(btn);
-  if (tab==='log') { renderRecent(); renderMyFoods(); }
+  if (tab==='log') {
+    // Always reload recent from Firebase when opening log tab
+    loadRecent().then(() => renderRecent());
+    renderMyFoods();
+  }
   if (tab==='trends') renderTrends();
   if (tab==='settings') applySettingsToUI();
   haptic(6);
@@ -465,27 +469,28 @@ window.updateFoodDetail=function(){updateFoodDetailMacros();};
 function updateFoodDetailMacros() {
   if(!currentFoodDetail)return;
   const g=parseFloat(document.getElementById('fdServing').value)||100;
-  const base=currentFoodDetail.serving||100,ratio=g/base;
+  const mult=parseFloat(document.getElementById('fdMultiplier').value)||1;
+  const base=currentFoodDetail.serving||100;
+  const ratio=(g/base)*mult;
   const cal=Math.round(currentFoodDetail.cal*ratio),prot=Math.round(currentFoodDetail.prot*ratio),carb=Math.round(currentFoodDetail.carb*ratio),fat=Math.round(currentFoodDetail.fat*ratio);
   document.getElementById('fdMacros').innerHTML=`<div class="fd-macro"><div class="fd-macro-val">${cal}</div><div class="fd-macro-label">kcal</div></div><div class="fd-macro"><div class="fd-macro-val">${prot}g</div><div class="fd-macro-label">Protein</div></div><div class="fd-macro"><div class="fd-macro-val">${carb}g</div><div class="fd-macro-label">Carbs</div></div><div class="fd-macro"><div class="fd-macro-val">${fat}g</div><div class="fd-macro-label">Fats</div></div>`;
-  currentFoodDetail._scaled={cal,prot,carb,fat,serving:g};
+  currentFoodDetail._scaled={cal,prot,carb,fat,serving:Math.round(g*mult)};
 }
 
-window.addFoodFromDetail=async function(){
+window.addFoodFromDetail=function(){
   if(!currentFoodDetail?._scaled)return;
   const s=currentFoodDetail._scaled,cat=document.getElementById('fdCat').value;
   const meal={cat,name:currentFoodDetail.name,cal:s.cal,prot:s.prot,carb:s.carb,fat:s.fat,serving:s.serving,baseCal:currentFoodDetail.cal,baseProt:currentFoodDetail.prot,baseCarb:currentFoodDetail.carb,baseFat:currentFoodDetail.fat,baseServing:currentFoodDetail.serving||100,ts:Date.now()};
-  await addMealToDay(meal);
   closeModalSwipe('foodDetailModal');
   window.showTab('home',document.querySelector('[data-tab="home"]'));
+  addMealToDay(meal); // fire and forget
 };
 
 async function addMealToDay(meal) {
   const key=dateStr(offsetDate(currentDayOffset));
   if(!dayCache[key])dayCache[key]={meals:[],water:0,date:key};
   dayCache[key].meals.push(meal);
-  await saveDay(key);
-  await addToRecent(meal);
+  // Instant UI update - don't wait for Firebase
   summarizeDay(key);
   renderHome();
   renderMonthStrip();
@@ -493,6 +498,9 @@ async function addMealToDay(meal) {
   // Check goal
   const t=getTotals(key);
   if(t.cal>=T.cal*0.98&&t.prot>=T.prot*0.95){soundGoal();haptic(50);}
+  // Save in background
+  saveDay(key);
+  addToRecent(meal);
 }
 
 // ── RECENT ─────────────────────────────────────────────────────────────────
@@ -501,8 +509,9 @@ function renderRecent() {
   if(!recentFoods.length){list.innerHTML='<div class="search-empty">No recent foods yet.</div>';return;}
   list.innerHTML='';
   recentFoods.forEach(food=>{
+    const enc=encodeURIComponent(JSON.stringify(food));
     const div=document.createElement('div');div.className='food-item';
-    div.innerHTML=`<div class="food-item-info" onclick="window.openFoodDetailFromRecent('${encodeURIComponent(JSON.stringify(food))}')"><div class="food-item-name">${food.name}</div><div class="food-item-meta">${food.cal} kcal · P:${food.prot}g · C:${food.carb}g · F:${food.fat}g</div></div><button class="food-item-add" onclick="window.openFoodDetailFromRecent('${encodeURIComponent(JSON.stringify(food))}')">+</button>`;
+    div.innerHTML=`<div class="food-item-info" onclick="window.openFoodDetailFromRecent('${enc}')"><div class="food-item-name">${food.name}</div><div class="food-item-meta">${food.cal} kcal · P:${food.prot}g · C:${food.carb}g · F:${food.fat}g</div></div><button class="food-item-add" onclick="window.quickAddRecent('${enc}')">+</button>`;
     list.appendChild(div);
   });
 }
@@ -510,6 +519,14 @@ function renderRecent() {
 window.openFoodDetailFromRecent=function(encoded){
   const food=JSON.parse(decodeURIComponent(encoded));
   openFoodDetail({...food,serving:100,per100:{cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat}});
+};
+
+window.quickAddRecent=async function(encoded){
+  const food=JSON.parse(decodeURIComponent(encoded));
+  const cat=document.getElementById('logCat').value||'breakfast';
+  const meal={cat,name:food.name,cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat,serving:100,baseServing:100,baseCal:food.cal,baseProt:food.prot,baseCarb:food.carb,baseFat:food.fat,ts:Date.now()};
+  await addMealToDay(meal);
+  showTab('home',document.querySelector('[data-tab="home"]'));
 };
 
 // ── MY FOODS ───────────────────────────────────────────────────────────────
