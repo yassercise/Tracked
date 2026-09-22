@@ -458,7 +458,7 @@ window.doSearch = async function() {
 function openFoodDetail(food) {
   currentFoodDetail={...food};
   document.getElementById('fdName').textContent=food.name;
-  document.getElementById('fdServing').value=food.serving||100;
+  const multEl=document.getElementById('fdMultiplier');if(multEl)multEl.value=1;
   document.getElementById('fdCat').value=document.getElementById('logCat').value||'breakfast';
   updateFoodDetailMacros();
   document.getElementById('foodDetailModal').classList.add('open');
@@ -468,13 +468,10 @@ window.updateFoodDetail=function(){updateFoodDetailMacros();};
 
 function updateFoodDetailMacros() {
   if(!currentFoodDetail)return;
-  const g=parseFloat(document.getElementById('fdServing').value)||100;
   const mult=parseFloat(document.getElementById('fdMultiplier').value)||1;
-  const base=currentFoodDetail.serving||100;
-  const ratio=(g/base)*mult;
-  const cal=Math.round(currentFoodDetail.cal*ratio),prot=Math.round(currentFoodDetail.prot*ratio),carb=Math.round(currentFoodDetail.carb*ratio),fat=Math.round(currentFoodDetail.fat*ratio);
+  const cal=Math.round(currentFoodDetail.cal*mult),prot=Math.round(currentFoodDetail.prot*mult),carb=Math.round(currentFoodDetail.carb*mult),fat=Math.round(currentFoodDetail.fat*mult);
   document.getElementById('fdMacros').innerHTML=`<div class="fd-macro"><div class="fd-macro-val">${cal}</div><div class="fd-macro-label">kcal</div></div><div class="fd-macro"><div class="fd-macro-val">${prot}g</div><div class="fd-macro-label">Protein</div></div><div class="fd-macro"><div class="fd-macro-val">${carb}g</div><div class="fd-macro-label">Carbs</div></div><div class="fd-macro"><div class="fd-macro-val">${fat}g</div><div class="fd-macro-label">Fats</div></div>`;
-  currentFoodDetail._scaled={cal,prot,carb,fat,serving:Math.round(g*mult)};
+  currentFoodDetail._scaled={cal,prot,carb,fat,servings:mult};
 }
 
 window.addFoodFromDetail=function(){
