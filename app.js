@@ -285,7 +285,7 @@ window.openEditMeal = function(idx) {
   document.getElementById('editMealName').textContent = meal.name;
   document.getElementById('editMealMacros').textContent = `${meal.cal} kcal · P:${meal.prot}g · C:${meal.carb}g · F:${meal.fat}g`;
   document.getElementById('editMealCat').value = meal.cat;
-  document.getElementById('editMealServing').value = meal.serving||100;
+  document.getElementById('editMealServing').value = meal.servings||1;
   document.getElementById('editMealModal').classList.add('open');
   window.updateEditMacros();
 };
@@ -294,10 +294,8 @@ window.updateEditMacros = function() {
   const key = dateStr(offsetDate(currentDayOffset));
   const meal = (dayCache[key]?.meals||[])[editingMealIdx];
   if (!meal) return;
-  const base = meal.baseServing||meal.serving||100;
-  const g = parseFloat(document.getElementById('editMealServing').value)||base;
-  const r = g/base;
-  const cal=Math.round((meal.baseCal||meal.cal)*r),prot=Math.round((meal.baseProt||meal.prot)*r),carb=Math.round((meal.baseCarb||meal.carb)*r),fat=Math.round((meal.baseFat||meal.fat)*r);
+  const mult = parseFloat(document.getElementById('editMealServing').value)||1;
+  const cal=Math.round((meal.baseCal||meal.cal)*mult),prot=Math.round((meal.baseProt||meal.prot)*mult),carb=Math.round((meal.baseCarb||meal.carb)*mult),fat=Math.round((meal.baseFat||meal.fat)*mult);
   document.getElementById('editMealPreview').textContent=`${cal} kcal · P:${prot}g · C:${carb}g · F:${fat}g`;
 };
 
@@ -305,13 +303,12 @@ window.saveEditMeal = async function() {
   const key = dateStr(offsetDate(currentDayOffset));
   const meal = (dayCache[key]?.meals||[])[editingMealIdx];
   if (!meal) return;
-  const base=meal.baseServing||meal.serving||100;
-  const g=parseFloat(document.getElementById('editMealServing').value)||base;
-  const r=g/base;
-  if (!meal.baseCal) { meal.baseCal=meal.cal; meal.baseProt=meal.prot; meal.baseCarb=meal.carb; meal.baseFat=meal.fat; meal.baseServing=base; }
-  meal.cal=Math.round(meal.baseCal*r); meal.prot=Math.round(meal.baseProt*r); meal.carb=Math.round(meal.baseCarb*r); meal.fat=Math.round(meal.baseFat*r);
-  meal.serving=g; meal.cat=document.getElementById('editMealCat').value;
-  await saveDay(key); renderHome(); window.closeModal('editMealModal'); haptic(10);
+  const mult = parseFloat(document.getElementById('editMealServing').value)||1;
+  if (!meal.baseCal) { meal.baseCal=meal.cal; meal.baseProt=meal.prot; meal.baseCarb=meal.carb; meal.baseFat=meal.fat; }
+  meal.cal=Math.round(meal.baseCal*mult); meal.prot=Math.round(meal.baseProt*mult); meal.carb=Math.round(meal.baseCarb*mult); meal.fat=Math.round(meal.baseFat*mult);
+  meal.servings=mult; meal.cat=document.getElementById('editMealCat').value;
+  renderHome(); window.closeModal('editMealModal'); haptic(10);
+  saveDay(key);
 };
 
 window.removeMeal = async function(idx) {

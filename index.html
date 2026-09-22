@@ -278,8 +278,8 @@
     <div class="modal-title">Edit Meal</div>
     <div class="edit-meal-name" id="editMealName"></div>
     <div class="edit-meal-macros" id="editMealMacros"></div>
-    <label>Serving size (g)</label>
-    <input type="number" id="editMealServing" value="100" oninput="window.updateEditMacros()" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;"/>
+    <label>Servings</label>
+    <input type="number" id="editMealServing" value="1" step="0.1" min="0.1" oninput="window.updateEditMacros()" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:12px;outline:none;" placeholder="e.g. 1, 1.5, 2"/>
     <div class="edit-preview" id="editMealPreview"></div>
     <label>Move to category</label>
     <select id="editMealCat" style="width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:14px;outline:none;">
