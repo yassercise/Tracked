@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyA0QDm49wVArv6oJA4YNGdRCXDe9OEtkI0",
@@ -314,15 +314,16 @@ window.saveEditMeal = async function() {
 window.removeMeal = async function(idx) {
   haptic(15); soundDelete();
   const key = dateStr(offsetDate(currentDayOffset));
-  const meals = dayCache[key]?.meals||[];
-  const meal = meals[idx];
-  if(!meal) return;
-  meals.splice(idx,1);
-  renderHome(); summarizeDay(key); renderMonthStrip();
-  // Use arrayRemove for safe cross-device delete
+  // Read latest first
   try {
-    await updateDoc(dayRef(key), {meals: arrayRemove(meal)});
-  } catch(e){ saveDay(key); }
+    const snap = await getDoc(dayRef(key));
+    if (snap.exists()) dayCache[key] = snap.data();
+  } catch(e) {}
+  const meals = dayCache[key]?.meals||[];
+  if (idx >= meals.length) return;
+  meals.splice(idx,1);
+  await saveDay(key);
+  renderHome(); summarizeDay(key); renderMonthStrip();
 };
 
 // ── WATER ──────────────────────────────────────────────────────────────────
@@ -489,23 +490,25 @@ window.addFoodFromDetail=function(){
 
 async function addMealToDay(meal) {
   const key=dateStr(offsetDate(currentDayOffset));
-  if(!dayCache[key])dayCache[key]={meals:[],water:0,date:key};
+  // Read latest from Firebase first to avoid overwriting other device's meals
+  try {
+    const snap = await getDoc(dayRef(key));
+    if (snap.exists()) {
+      dayCache[key] = snap.data();
+    } else {
+      dayCache[key] = {meals:[],water:0,date:key};
+    }
+  } catch(e) {
+    if (!dayCache[key]) dayCache[key] = {meals:[],water:0,date:key};
+  }
+  if (!dayCache[key].meals) dayCache[key].meals = [];
   dayCache[key].meals.push(meal);
+  // Save immediately
+  await saveDay(key);
   // Instant UI update
   summarizeDay(key);renderHome();renderMonthStrip();soundLog();haptic(10);
-  // Check goal
   const t=getTotals(key);
   if(t.cal>=T.cal*0.98&&t.prot>=T.prot*0.95){soundGoal();haptic(50);}
-  // Use arrayUnion so multiple devices don't overwrite each other
-  try {
-    const ref=dayRef(key);
-    const snap=await getDoc(ref);
-    if(snap.exists()){
-      await updateDoc(ref,{meals:arrayUnion(meal)});
-    } else {
-      await setDoc(ref,dayCache[key]);
-    }
-  } catch(e){ saveDay(key); } // fallback
   addToRecent(meal);
 }
 
@@ -782,13 +785,35 @@ window.openCreateFoodModal=function(){
 };
 window.addPendingMeal=async function(){if(!window._pendingMeal)return;await addMealToDay(window._pendingMeal);window._pendingMeal=null;window.showTab('home',document.querySelector('[data-tab="home"]'));};
 
-init();
+init().then(() => startTodayListener());
 
-// Refresh today's data when user returns to the app
+// Real-time listener for today - auto-syncs across devices
+let todayListener = null;
+function startTodayListener() {
+  if (todayListener) todayListener(); // unsubscribe previous
+  const key = dateStr(new Date());
+  todayListener = onSnapshot(dayRef(key), (snap) => {
+    if (snap.exists()) {
+      const fresh = snap.data();
+      // Only update if data changed and we're viewing today
+      if (currentDayOffset === 0) {
+        dayCache[key] = fresh;
+        renderHome();
+        renderWater();
+        summarizeDay(key);
+        renderMonthStrip();
+      } else {
+        dayCache[key] = fresh;
+      }
+    }
+  });
+}
+
+// Refresh when switching back to the app
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible') {
     const key = dateStr(offsetDate(currentDayOffset));
-    await loadDay(key, true); // force fresh from Firebase
+    await loadDay(key, true);
     renderHome();
     renderWater();
   }
