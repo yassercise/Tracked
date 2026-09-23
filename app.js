@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyA0QDm49wVArv6oJA4YNGdRCXDe9OEtkI0",
@@ -95,12 +95,12 @@ async function loadSettings() {
   applySettingsToUI();
 }
 
-async function loadDay(key) {
-  if (dayCache[key]) return dayCache[key];
+async function loadDay(key, forceRefresh=false) {
+  if (dayCache[key] && !forceRefresh) return dayCache[key];
   try {
     const s = await getDoc(dayRef(key));
     dayCache[key] = s.exists() ? s.data() : {meals:[],water:0,date:key};
-  } catch(e) { dayCache[key] = {meals:[],water:0,date:key}; }
+  } catch(e) { if(!dayCache[key]) dayCache[key] = {meals:[],water:0,date:key}; }
   if (!dayCache[key].meals) dayCache[key].meals = [];
   return dayCache[key];
 }
@@ -314,8 +314,15 @@ window.saveEditMeal = async function() {
 window.removeMeal = async function(idx) {
   haptic(15); soundDelete();
   const key = dateStr(offsetDate(currentDayOffset));
-  (dayCache[key]?.meals||[]).splice(idx,1);
-  await saveDay(key); renderHome(); summarizeDay(key); renderMonthStrip();
+  const meals = dayCache[key]?.meals||[];
+  const meal = meals[idx];
+  if(!meal) return;
+  meals.splice(idx,1);
+  renderHome(); summarizeDay(key); renderMonthStrip();
+  // Use arrayRemove for safe cross-device delete
+  try {
+    await updateDoc(dayRef(key), {meals: arrayRemove(meal)});
+  } catch(e){ saveDay(key); }
 };
 
 // ── WATER ──────────────────────────────────────────────────────────────────
@@ -484,16 +491,21 @@ async function addMealToDay(meal) {
   const key=dateStr(offsetDate(currentDayOffset));
   if(!dayCache[key])dayCache[key]={meals:[],water:0,date:key};
   dayCache[key].meals.push(meal);
-  // Instant UI update - don't wait for Firebase
-  summarizeDay(key);
-  renderHome();
-  renderMonthStrip();
-  soundLog();haptic(10);
+  // Instant UI update
+  summarizeDay(key);renderHome();renderMonthStrip();soundLog();haptic(10);
   // Check goal
   const t=getTotals(key);
   if(t.cal>=T.cal*0.98&&t.prot>=T.prot*0.95){soundGoal();haptic(50);}
-  // Save in background
-  saveDay(key);
+  // Use arrayUnion so multiple devices don't overwrite each other
+  try {
+    const ref=dayRef(key);
+    const snap=await getDoc(ref);
+    if(snap.exists()){
+      await updateDoc(ref,{meals:arrayUnion(meal)});
+    } else {
+      await setDoc(ref,dayCache[key]);
+    }
+  } catch(e){ saveDay(key); } // fallback
   addToRecent(meal);
 }
 
@@ -771,3 +783,13 @@ window.openCreateFoodModal=function(){
 window.addPendingMeal=async function(){if(!window._pendingMeal)return;await addMealToDay(window._pendingMeal);window._pendingMeal=null;window.showTab('home',document.querySelector('[data-tab="home"]'));};
 
 init();
+
+// Refresh today's data when user returns to the app
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    const key = dateStr(offsetDate(currentDayOffset));
+    await loadDay(key, true); // force fresh from Firebase
+    renderHome();
+    renderWater();
+  }
+});
