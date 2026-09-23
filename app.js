@@ -122,7 +122,15 @@ async function saveRecent() {
 }
 
 async function addToRecent(meal) {
-  const entry = {name:meal.name,cal:meal.cal,prot:meal.prot,carb:meal.carb,fat:meal.fat,ts:Date.now()};
+  // Always store BASE macros (1 serving), not the scaled amount
+  const entry = {
+    name: meal.name,
+    cal: meal.baseCal || meal.cal,
+    prot: meal.baseProt || meal.prot,
+    carb: meal.baseCarb || meal.carb,
+    fat: meal.baseFat || meal.fat,
+    ts: Date.now()
+  };
   recentFoods = [entry,...recentFoods.filter(r=>r.name!==meal.name)].slice(0,50);
   await saveRecent();
 }
@@ -314,16 +322,13 @@ window.saveEditMeal = async function() {
 window.removeMeal = async function(idx) {
   haptic(15); soundDelete();
   const key = dateStr(offsetDate(currentDayOffset));
-  // Read latest first
-  try {
-    const snap = await getDoc(dayRef(key));
-    if (snap.exists()) dayCache[key] = snap.data();
-  } catch(e) {}
   const meals = dayCache[key]?.meals||[];
   if (idx >= meals.length) return;
   meals.splice(idx,1);
-  await saveDay(key);
+  // Instant UI update
   renderHome(); summarizeDay(key); renderMonthStrip();
+  // Save in background
+  saveDay(key);
 };
 
 // ── WATER ──────────────────────────────────────────────────────────────────
@@ -482,34 +487,54 @@ function updateFoodDetailMacros() {
 window.addFoodFromDetail=function(){
   if(!currentFoodDetail?._scaled)return;
   const s=currentFoodDetail._scaled,cat=document.getElementById('fdCat').value;
-  const meal={cat,name:currentFoodDetail.name,cal:s.cal,prot:s.prot,carb:s.carb,fat:s.fat,serving:s.serving,baseCal:currentFoodDetail.cal,baseProt:currentFoodDetail.prot,baseCarb:currentFoodDetail.carb,baseFat:currentFoodDetail.fat,baseServing:currentFoodDetail.serving||100,ts:Date.now()};
+  // baseCal/Prot/Carb/Fat always = 1 serving (the original food macros)
+  const meal={
+    cat, name:currentFoodDetail.name,
+    cal:s.cal, prot:s.prot, carb:s.carb, fat:s.fat,
+    servings: s.servings||1,
+    baseCal:currentFoodDetail.cal, baseProt:currentFoodDetail.prot,
+    baseCarb:currentFoodDetail.carb, baseFat:currentFoodDetail.fat,
+    baseServing:1, ts:Date.now()
+  };
   closeModalSwipe('foodDetailModal');
   window.showTab('home',document.querySelector('[data-tab="home"]'));
-  addMealToDay(meal); // fire and forget
+  addMealToDay(meal);
 };
 
 async function addMealToDay(meal) {
   const key=dateStr(offsetDate(currentDayOffset));
-  // Read latest from Firebase first to avoid overwriting other device's meals
-  try {
-    const snap = await getDoc(dayRef(key));
-    if (snap.exists()) {
-      dayCache[key] = snap.data();
-    } else {
-      dayCache[key] = {meals:[],water:0,date:key};
-    }
-  } catch(e) {
-    if (!dayCache[key]) dayCache[key] = {meals:[],water:0,date:key};
-  }
-  if (!dayCache[key].meals) dayCache[key].meals = [];
+  if(!dayCache[key])dayCache[key]={meals:[],water:0,date:key};
+  if(!dayCache[key].meals)dayCache[key].meals=[];
   dayCache[key].meals.push(meal);
-  // Save immediately
-  await saveDay(key);
-  // Instant UI update
+  // Instant UI - no waiting
   summarizeDay(key);renderHome();renderMonthStrip();soundLog();haptic(10);
   const t=getTotals(key);
   if(t.cal>=T.cal*0.98&&t.prot>=T.prot*0.95){soundGoal();haptic(50);}
+  // Save in background - merge with latest to avoid cross-device conflicts
+  mergeAndSave(key, meal, 'add');
   addToRecent(meal);
+}
+
+async function mergeAndSave(key, meal, op) {
+  try {
+    const snap = await getDoc(dayRef(key));
+    if (snap.exists()) {
+      const serverData = snap.data();
+      const serverMeals = serverData.meals || [];
+      if (op === 'add') {
+        // Add meal if not already there (avoid duplicates)
+        const isDupe = serverMeals.some(m => m.ts === meal.ts);
+        if (!isDupe) serverMeals.push(meal);
+        dayCache[key] = {...serverData, meals: serverMeals};
+      }
+      await setDoc(dayRef(key), dayCache[key]);
+    } else {
+      await setDoc(dayRef(key), dayCache[key]);
+    }
+  } catch(e) {
+    // Fallback direct save
+    try { await setDoc(dayRef(key), dayCache[key]); } catch(e2){}
+  }
 }
 
 // ── RECENT ─────────────────────────────────────────────────────────────────
@@ -530,11 +555,11 @@ window.openFoodDetailFromRecent=function(encoded){
   openFoodDetail({...food,serving:100,per100:{cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat}});
 };
 
-window.quickAddRecent=async function(encoded){
+window.quickAddRecent=function(encoded){
   const food=JSON.parse(decodeURIComponent(encoded));
   const cat=document.getElementById('logCat').value||'breakfast';
-  const meal={cat,name:food.name,cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat,serving:100,baseServing:100,baseCal:food.cal,baseProt:food.prot,baseCarb:food.carb,baseFat:food.fat,ts:Date.now()};
-  await addMealToDay(meal);
+  const meal={cat,name:food.name,cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat,baseServing:1,baseCal:food.cal,baseProt:food.prot,baseCarb:food.carb,baseFat:food.fat,ts:Date.now()};
+  addMealToDay(meal); // fire and forget
   showTab('home',document.querySelector('[data-tab="home"]'));
 };
 
