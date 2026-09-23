@@ -1431,7 +1431,7 @@ function renderTaskTracker() {
         <div class="task-detail-grid">
           <div>
             <div class="detail-block-title">Subtasks</div>
-            <div id="subtasks-${t.id}"></div>
+            <div id="subtasks-${t.id}" class="subtasks-scroll"></div>
             <div class="add-subtask-row"><input type="text" id="newSub-${t.id}" placeholder="Add a subtask…"><button data-task="${t.id}" class="addSubBtn">Add</button></div>
           </div>
           <div>
