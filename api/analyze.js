@@ -12,7 +12,22 @@ export default async function handler(req, res) {
   }
 
   const descText = description ? ` Additional context: ${description}.` : '';
-  const promptText = `Analyze this meal and estimate nutritional content.${descText} Respond ONLY with a JSON object, no markdown: {"name":"meal name","cal":0,"prot":0,"carb":0,"fat":0,"notes":"brief accuracy note"}`;
+  const promptText = `Analyze this meal and estimate the nutritional content.${descText}
+
+First, identify each individual food item you can see, estimate its weight in grams, and calculate its macros. Then provide the combined total.
+
+Respond ONLY with a JSON object in this exact format, no markdown, no other text:
+{
+  "name": "overall meal name",
+  "cal": 0,
+  "prot": 0,
+  "carb": 0,
+  "fat": 0,
+  "notes": "brief accuracy note",
+  "breakdown": [
+    {"item": "food item name", "weight": "estimated grams e.g. 150g", "cal": 0, "prot": 0, "carb": 0, "fat": 0}
+  ]
+}`;
 
   const content = [];
   if (images && images.length) {
@@ -27,11 +42,6 @@ export default async function handler(req, res) {
   }
   content.push({ type: 'text', text: promptText });
 
-  // If no valid images and no description, use text only
-  if (content.length === 1 && !description) {
-    return res.status(400).json({ error: 'No valid image data received' });
-  }
-
   try {
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -42,7 +52,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
+        max_tokens: 1500,
         messages: [{ role: 'user', content }]
       })
     });
