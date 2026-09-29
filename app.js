@@ -64,29 +64,52 @@ let currentFoodDetail = null;
 let editingMealIdx = null;
 
 // ── INIT ───────────────────────────────────────────────────────────────────
+function setLoadingProgress(pct, label) {
+  const bar = document.getElementById('loadingBar');
+  const lbl = document.getElementById('loadingLabel');
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = label;
+}
+
+function hideLoadingScreen() {
+  const screen = document.getElementById('loadingScreen');
+  if (!screen) return;
+  screen.style.opacity = '0';
+  screen.style.transform = 'scale(1.04)';
+  setTimeout(() => screen.remove(), 520);
+}
+
 async function init() {
+  setLoadingProgress(15, 'LOADING SETTINGS');
   await loadSettings();
-  // Load today immediately
+
+  setLoadingProgress(35, 'LOADING TODAY');
   await loadDay(today());
+
+  setLoadingProgress(60, 'RENDERING');
   renderHome();
   renderWater();
   drawBody();
   updateTabPill(document.querySelector('.tab-btn.active'));
-  // Lazy load the rest
-  setTimeout(async () => {
-    await loadFoods();
-    await loadRecent();
-    await loadMonthHistory();
-    renderMonthStrip();
-  }, 300);
+
+  setLoadingProgress(80, 'SYNCING DATA');
+  await loadFoods();
+  await loadRecent();
+
+  setLoadingProgress(100, 'READY');
+
   // Event listeners
-  // searchInput uses oninput for local search - no keydown needed
   document.getElementById('logModalSearch').addEventListener('keydown', e => { if (e.key === 'Enter') window.doModalSearch(); });
   document.querySelectorAll('.modal-overlay').forEach(o => {
     o.addEventListener('click', e => { if (e.target === o) closeModalSwipe(o.id); });
   });
-  // Swipe down to dismiss modals
   setupModalSwipe();
+
+  // Hide loading screen then lazy load history
+  setTimeout(() => {
+    hideLoadingScreen();
+    loadMonthHistory().then(() => renderMonthStrip());
+  }, 500);
 }
 
 // ── LOAD / SAVE ────────────────────────────────────────────────────────────
