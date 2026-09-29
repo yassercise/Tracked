@@ -64,6 +64,38 @@ let currentFoodDetail = null;
 let editingMealIdx = null;
 
 // ── INIT ───────────────────────────────────────────────────────────────────
+// ── TOAST ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  // Remove any existing toast
+  const existing = document.getElementById('appToast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.id = 'appToast';
+  toast.textContent = msg;
+  toast.style.cssText = `
+    position:fixed;bottom:calc(var(--tab-h) + var(--safe-bottom) + 16px);left:50%;
+    transform:translateX(-50%) translateY(10px);
+    background:rgba(18,20,26,0.92);color:#fff;
+    padding:10px 18px;border-radius:20px;
+    font-family:'Manrope',sans-serif;font-size:13px;font-weight:600;
+    white-space:nowrap;z-index:500;
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 4px 20px rgba(0,0,0,0.3);
+    opacity:0;transition:opacity 220ms ease,transform 220ms ease;
+  `;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(8px)';
+    setTimeout(() => toast.remove(), 250);
+  }, 2000);
+}
+
 function setLoadingProgress(pct, label) {
   const bar = document.getElementById('loadingBar');
   const lbl = document.getElementById('loadingLabel');
@@ -314,9 +346,17 @@ window.openEditMeal = function(idx) {
   if (!meal) return;
   editingMealIdx = idx;
   document.getElementById('editMealName').textContent = meal.name;
-  document.getElementById('editMealMacros').textContent = `${meal.cal} kcal · P:${meal.prot}g · C:${meal.carb}g · F:${meal.fat}g`;
+  document.getElementById('editMealMacros').textContent = meal.cal+' kcal · P:'+meal.prot+'g · C:'+meal.carb+'g · F:'+meal.fat+'g';
   document.getElementById('editMealCat').value = meal.cat;
   document.getElementById('editMealServing').value = meal.servings||1;
+  const bdEl = document.getElementById('editMealBreakdown');
+  if (bdEl) {
+    if (meal.breakdown && meal.breakdown.length > 0) {
+      bdEl.style.display = 'block';
+      bdEl.innerHTML = '<div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">AI Breakdown</div>' +
+        meal.breakdown.map(function(item){return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--card-border);font-size:11.5px;"><div><span style="font-weight:700;">'+item.item+'</span><span style="color:var(--text-dim);margin-left:5px;">'+item.weight+'</span></div><div style="color:var(--text-dim);">'+item.cal+' kcal · P:'+item.prot+'g · C:'+item.carb+'g · F:'+item.fat+'g</div></div>';}).join('');
+    } else { bdEl.style.display = 'none'; }
+  }
   document.getElementById('editMealModal').classList.add('open');
   window.updateEditMacros();
 };
@@ -404,6 +444,9 @@ window.showTab = function(tab, btn) {
   document.querySelectorAll('[data-tab="'+tab+'"]').forEach(el=>el.classList.add('active'));
   if (btn?.classList.contains('tab-btn')) updateTabPill(btn);
   if (tab==='log') {
+    // Scroll to top
+    const main = document.getElementById('mainScroll');
+    if (main) main.scrollTop = 0;
     // Always reload recent from Firebase when opening log tab
     loadRecent().then(() => renderRecent());
     renderMyFoods();
@@ -516,7 +559,6 @@ function updateFoodDetailMacros() {
 window.addFoodFromDetail=function(){
   if(!currentFoodDetail?._scaled)return;
   const s=currentFoodDetail._scaled,cat=document.getElementById('fdCat').value;
-  // baseCal/Prot/Carb/Fat always = 1 serving (the original food macros)
   const meal={
     cat, name:currentFoodDetail.name,
     cal:s.cal, prot:s.prot, carb:s.carb, fat:s.fat,
@@ -526,8 +568,8 @@ window.addFoodFromDetail=function(){
     baseServing:1, ts:Date.now()
   };
   closeModalSwipe('foodDetailModal');
-  window.showTab('home',document.querySelector('[data-tab="home"]'));
   addMealToDay(meal);
+  showToast(currentFoodDetail.name+' added to '+cat);
 };
 
 async function addMealToDay(meal) {
@@ -588,8 +630,9 @@ window.quickAddRecent=function(encoded){
   const food=JSON.parse(decodeURIComponent(encoded));
   const cat=document.getElementById('logCat').value||'breakfast';
   const meal={cat,name:food.name,cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat,baseServing:1,baseCal:food.cal,baseProt:food.prot,baseCarb:food.carb,baseFat:food.fat,ts:Date.now()};
-  addMealToDay(meal); // fire and forget
-  showTab('home',document.querySelector('[data-tab="home"]'));
+  addMealToDay(meal);
+  // Show a brief toast confirmation instead of redirecting
+  showToast(food.name+' added to '+cat);
 };
 
 // ── MY FOODS ───────────────────────────────────────────────────────────────
@@ -643,9 +686,9 @@ window.saveManualMeal=async function(){
   const fullName=source?name+' ('+source+')':name;
   const meal={cat:document.getElementById('manualCat').value,name:fullName,cal:parseInt(document.getElementById('manualCal').value)||0,prot:parseInt(document.getElementById('manualProt').value)||0,carb:parseInt(document.getElementById('manualCarb').value)||0,fat:parseInt(document.getElementById('manualFat').value)||0,serving:100,baseServing:100,ts:Date.now()};
   meal.baseCal=meal.cal;meal.baseProt=meal.prot;meal.baseCarb=meal.carb;meal.baseFat=meal.fat;
-  await addMealToDay(meal);
-  window.showTab('home',document.querySelector('[data-tab="home"]'));
+  addMealToDay(meal);
   ['manualName','manualSource','manualCal','manualProt','manualCarb','manualFat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  showToast(fullName+' added to '+meal.cat);
 };
 
 // ── MODAL SEARCH ───────────────────────────────────────────────────────────
@@ -791,6 +834,7 @@ window.analyzeMealLog=async function(){
     document.getElementById('scanEditFat').value=result.fat;document.getElementById('scanResultNotesLog').textContent=result.notes||'';
     const bdWrap=document.getElementById('scanBreakdownLog');
     const bdItems=document.getElementById('scanBreakdownItems');
+    window._lastScanBreakdown = result.breakdown||[];
     if(bdWrap&&bdItems&&result.breakdown&&result.breakdown.length>0){
       bdWrap.style.display='block';
       bdItems.innerHTML=result.breakdown.map(item=>
@@ -807,9 +851,23 @@ window.analyzeMealLog=async function(){
 window.addScannedMealLog=async function(){
   const source=document.getElementById('scanEditSource')?.value.trim()||'';
   const name=document.getElementById('scanEditName').value||'Scanned meal';
-  const meal={cat:document.getElementById('scanCatLog').value,name:source?name+' ('+source+')':name,cal:parseInt(document.getElementById('scanEditCal').value)||0,prot:parseInt(document.getElementById('scanEditProt').value)||0,carb:parseInt(document.getElementById('scanEditCarb').value)||0,fat:parseInt(document.getElementById('scanEditFat').value)||0,serving:100,baseServing:100,ts:Date.now()};
+  // Collect breakdown items
+  const bdItems=document.getElementById('scanBreakdownItems');
+  let breakdown=[];
+  if(bdItems&&window._lastScanBreakdown){breakdown=window._lastScanBreakdown;}
+  const meal={
+    cat:document.getElementById('scanCatLog').value,
+    name:source?name+' ('+source+')':name,
+    cal:parseInt(document.getElementById('scanEditCal').value)||0,
+    prot:parseInt(document.getElementById('scanEditProt').value)||0,
+    carb:parseInt(document.getElementById('scanEditCarb').value)||0,
+    fat:parseInt(document.getElementById('scanEditFat').value)||0,
+    baseServing:1,ts:Date.now(),
+    breakdown:breakdown
+  };
   meal.baseCal=meal.cal;meal.baseProt=meal.prot;meal.baseCarb=meal.carb;meal.baseFat=meal.fat;
-  await addMealToDay(meal);window.showTab('home',document.querySelector('[data-tab="home"]'));
+  await addMealToDay(meal);
+  window.showTab('home',document.querySelector('[data-tab="home"]'));
 };
 
 window.resetScan=function(){
