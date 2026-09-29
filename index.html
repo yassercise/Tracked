@@ -188,6 +188,10 @@
           <div><label>Carbs (g)</label><input type="number" id="scanEditCarb" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
           <div><label>Fats (g)</label><input type="number" id="scanEditFat" style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);outline:none;"/></div>
         </div>
+        <div id="scanBreakdownLog" style="margin-bottom:12px;display:none;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Breakdown</div>
+          <div id="scanBreakdownItems"></div>
+        </div>
         <div id="scanResultNotesLog" style="font-size:11px;color:var(--text-dim);margin-bottom:12px;"></div>
         <label>Feedback / Correction</label>
         <textarea id="scanFeedback" placeholder="e.g. Actually looks more like 200g, not 350g. Also has extra cheese." style="width:100%;border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;font-size:13px;font-family:'Manrope',sans-serif;background:var(--card);color:var(--text);margin-bottom:10px;outline:none;resize:none;min-height:60px;"></textarea>
