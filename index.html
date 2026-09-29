@@ -117,10 +117,8 @@
         <option value="snacks">Snacks</option>
         <option value="drinks">Drinks</option>
       </select>
-      <input class="log-search-input" id="searchInput" type="text" placeholder="Search food..." autocomplete="off"/>
-      <button class="log-search-btn" onclick="window.doSearch()">Go</button>
+      <input class="log-search-input" id="searchInput" type="text" placeholder="Search your foods..." autocomplete="off" oninput="window.searchLocalFoods(this.value)"/>
     </div>
-    <div style="text-align:center;padding:6px 20px 0;"><div class="search-spinner" id="searchSpinner"></div></div>
     <div class="search-results" id="searchResults"></div>
 
     <div class="log-tabs" style="margin-top:8px;">

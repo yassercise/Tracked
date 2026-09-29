@@ -80,7 +80,7 @@ async function init() {
     renderMonthStrip();
   }, 300);
   // Event listeners
-  document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') window.doSearch(); });
+  // searchInput uses oninput for local search - no keydown needed
   document.getElementById('logModalSearch').addEventListener('keydown', e => { if (e.key === 'Enter') window.doModalSearch(); });
   document.querySelectorAll('.modal-overlay').forEach(o => {
     o.addEventListener('click', e => { if (e.target === o) closeModalSwipe(o.id); });
@@ -433,35 +433,41 @@ function closeModalSwipe(id) {
 window.closeModal=closeModalSwipe;
 
 // ── FOOD SEARCH ────────────────────────────────────────────────────────────
-function parseItem(item) {
-  const serving=parseFloat(item.serving_size_g)||100;
-  const cal=parseFloat(item.calories)||0,prot=parseFloat(item.protein_g)||0,carb=parseFloat(item.carbohydrates_total_g)||0,fat=parseFloat(item.fat_total_g)||0;
-  return {name:item.name,serving,cal:Math.round(cal),prot:Math.round(prot),carb:Math.round(carb),fat:Math.round(fat),per100:{cal:Math.round(cal/serving*100),prot:Math.round(prot/serving*100),carb:Math.round(carb/serving*100),fat:Math.round(fat/serving*100)}};
-}
+// External food search removed - using local search over recent/saved foods
 
-async function fetchNutrition(q) {
-  const res=await fetch('/api/search?query='+encodeURIComponent(q));
-  const data=await res.json();
-  return Array.isArray(data.items)?data.items:[];
-}
-
-window.doSearch = async function() {
-  const q=document.getElementById('searchInput').value.trim();
-  if(!q)return;
-  const spinner=document.getElementById('searchSpinner'),results=document.getElementById('searchResults');
-  spinner.classList.add('active');results.innerHTML='';
-  try {
-    const items=await fetchNutrition(q);
-    spinner.classList.remove('active');
-    if(!items.length){results.innerHTML='<div class="search-empty">No results.</div>';return;}
-    items.forEach(item=>{
-      const p=parseItem(item);
-      const div=document.createElement('div');div.className='search-result-item';
-      div.innerHTML=`<div class="search-result-name">${p.name}</div><div class="search-result-meta">${p.cal} kcal · P:${p.prot}g · C:${p.carb}g · F:${p.fat}g · ${p.serving}g</div>`;
-      div.onclick=()=>openFoodDetail(p);
-      results.appendChild(div);
-    });
-  } catch(e){spinner.classList.remove('active');results.innerHTML='<div class="search-empty">Search unavailable.</div>';}
+window.searchLocalFoods = function(q) {
+  const results = document.getElementById('searchResults');
+  if (!q || q.trim().length < 1) { results.innerHTML = ''; return; }
+  const term = q.toLowerCase().trim();
+  // Search across recent foods + saved foods
+  const recentMatches = recentFoods.filter(f => f.name.toLowerCase().includes(term));
+  const savedMatches = allFoods.filter(f => f.name.toLowerCase().includes(term));
+  // Deduplicate by name (prefer recent entry)
+  const seen = new Set();
+  const combined = [...recentMatches, ...savedMatches].filter(f => {
+    if (seen.has(f.name)) return false;
+    seen.add(f.name); return true;
+  });
+  results.innerHTML = '';
+  if (!combined.length) {
+    results.innerHTML = '<div class="search-empty">No matching foods found.</div>';
+    return;
+  }
+  combined.slice(0, 20).forEach(food => {
+    const enc = encodeURIComponent(JSON.stringify(food));
+    const div = document.createElement('div'); div.className = 'search-result-item';
+    div.innerHTML = `<div class="search-result-name">${food.name}</div><div class="search-result-meta">${food.cal} kcal · P:${food.prot}g · C:${food.carb}g · F:${food.fat}g</div>`;
+    // Tap to open detail, + to quick add
+    div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '10px';
+    const info = document.createElement('div'); info.style.flex = '1';
+    info.innerHTML = `<div class="search-result-name">${food.name}</div><div class="search-result-meta">${food.cal} kcal · P:${food.prot}g · C:${food.carb}g · F:${food.fat}g</div>`;
+    info.onclick = () => openFoodDetail({...food, serving: food.serving||100, per100:{cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat}});
+    const btn = document.createElement('button');
+    btn.className = 'food-item-add'; btn.textContent = '+';
+    btn.onclick = (e) => { e.stopPropagation(); window.quickAddRecent(enc); document.getElementById('searchInput').value=''; document.getElementById('searchResults').innerHTML=''; };
+    div.innerHTML = ''; div.appendChild(info); div.appendChild(btn);
+    results.appendChild(div);
+  });
 };
 
 // ── FOOD DETAIL ────────────────────────────────────────────────────────────
@@ -620,20 +626,22 @@ window.saveManualMeal=async function(){
 };
 
 // ── MODAL SEARCH ───────────────────────────────────────────────────────────
-window.doModalSearch=async function(){
-  const q=document.getElementById('logModalSearch').value.trim();if(!q)return;
+window.doModalSearch=function(){
+  const q=document.getElementById('logModalSearch').value.trim();
+  if(!q)return;
   const results=document.getElementById('logModalResults');
-  results.innerHTML='<div style="text-align:center;padding:12px;color:var(--text-faint);font-size:13px;">Searching...</div>';
-  try{
-    const items=await fetchNutrition(q);results.innerHTML='';
-    if(!items.length){results.innerHTML='<div style="text-align:center;padding:12px;color:var(--text-faint);font-size:13px;">No results</div>';return;}
-    items.slice(0,6).forEach(item=>{
-      const p=parseItem(item);const div=document.createElement('div');div.className='search-result-item';div.style.marginBottom='4px';
-      div.innerHTML=`<div class="search-result-name">${p.name}</div><div class="search-result-meta">${p.cal} kcal · P:${p.prot}g · ${p.serving}g</div>`;
-      div.onclick=()=>{closeModalSwipe('logModal');openFoodDetail(p);};
-      results.appendChild(div);
-    });
-  }catch(e){results.innerHTML='<div style="text-align:center;padding:12px;color:var(--red);font-size:13px;">Search failed</div>';}
+  const term=q.toLowerCase();
+  const combined=[...recentFoods,...allFoods].filter((f,i,arr)=>
+    f.name.toLowerCase().includes(term) && arr.findIndex(x=>x.name===f.name)===i
+  ).slice(0,8);
+  results.innerHTML='';
+  if(!combined.length){results.innerHTML='<div style="text-align:center;padding:12px;color:var(--text-faint);font-size:13px;">No results</div>';return;}
+  combined.forEach(food=>{
+    const div=document.createElement('div');div.className='search-result-item';div.style.marginBottom='4px';
+    div.innerHTML=`<div class="search-result-name">${food.name}</div><div class="search-result-meta">${food.cal} kcal · P:${food.prot}g · C:${food.carb}g · F:${food.fat}g</div>`;
+    div.onclick=()=>{closeModalSwipe('logModal');openFoodDetail({...food,serving:food.serving||100,per100:{cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat}});};
+    results.appendChild(div);
+  });
 };
 
 window.openLogModal=function(){
