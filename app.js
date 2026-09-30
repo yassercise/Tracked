@@ -385,13 +385,14 @@ window.saveEditMeal = async function() {
 window.removeMeal = async function(idx) {
   haptic(15); soundDelete();
   const key = dateStr(offsetDate(currentDayOffset));
-  const meals = dayCache[key]?.meals||[];
-  if (idx >= meals.length) return;
-  meals.splice(idx,1);
-  // Instant UI update
-  renderHome(); summarizeDay(key); renderMonthStrip();
-  // Save in background
-  saveDay(key);
+  if(!dayCache[key]||!dayCache[key].meals)return;
+  const meals = dayCache[key].meals;
+  if(idx < 0 || idx >= meals.length)return;
+  meals.splice(idx, 1);
+  renderHome();
+  summarizeDay(key);
+  renderMonthStrip();
+  try { await setDoc(dayRef(key), dayCache[key]); } catch(e){ console.error('removeMeal save error:',e); }
 };
 
 // ── WATER ──────────────────────────────────────────────────────────────────
@@ -577,35 +578,11 @@ async function addMealToDay(meal) {
   if(!dayCache[key])dayCache[key]={meals:[],water:0,date:key};
   if(!dayCache[key].meals)dayCache[key].meals=[];
   dayCache[key].meals.push(meal);
-  // Instant UI - no waiting
   summarizeDay(key);renderHome();renderMonthStrip();soundLog();haptic(10);
   const t=getTotals(key);
   if(t.cal>=T.cal*0.98&&t.prot>=T.prot*0.95){soundGoal();haptic(50);}
-  // Save in background - merge with latest to avoid cross-device conflicts
-  mergeAndSave(key, meal, 'add');
+  saveDay(key);
   addToRecent(meal);
-}
-
-async function mergeAndSave(key, meal, op) {
-  try {
-    const snap = await getDoc(dayRef(key));
-    if (snap.exists()) {
-      const serverData = snap.data();
-      const serverMeals = serverData.meals || [];
-      if (op === 'add') {
-        // Add meal if not already there (avoid duplicates)
-        const isDupe = serverMeals.some(m => m.ts === meal.ts);
-        if (!isDupe) serverMeals.push(meal);
-        dayCache[key] = {...serverData, meals: serverMeals};
-      }
-      await setDoc(dayRef(key), dayCache[key]);
-    } else {
-      await setDoc(dayRef(key), dayCache[key]);
-    }
-  } catch(e) {
-    // Fallback direct save
-    try { await setDoc(dayRef(key), dayCache[key]); } catch(e2){}
-  }
 }
 
 // ── RECENT ─────────────────────────────────────────────────────────────────
@@ -631,21 +608,18 @@ window.quickAddRecent=function(encoded){
     const food=JSON.parse(decodeURIComponent(encoded));
     const catEl=document.getElementById('logCat');
     const cat=(catEl&&catEl.value)||'breakfast';
-    // Always add to today regardless of which day is being viewed
     const key=today();
     if(!dayCache[key])dayCache[key]={meals:[],water:0,date:key};
     if(!dayCache[key].meals)dayCache[key].meals=[];
     const meal={cat,name:food.name,cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat,baseServing:1,baseCal:food.cal,baseProt:food.prot,baseCarb:food.carb,baseFat:food.fat,ts:Date.now()};
     dayCache[key].meals.push(meal);
     summarizeDay(key);
-    // Re-render home if we're viewing today
     if(currentDayOffset===0)renderHome();
     soundLog();haptic(10);
     showToast(food.name+' added to '+cat);
-    // Save in background
-    mergeAndSave(key, meal, 'add');
+    saveDay(key);
     addToRecent(meal);
-  } catch(e) { console.error('quickAddRecent error:', e); }
+  } catch(e){console.error('quickAdd error:',e);}
 };
 
 // ── MY FOODS ───────────────────────────────────────────────────────────────
