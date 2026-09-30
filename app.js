@@ -627,12 +627,25 @@ window.openFoodDetailFromRecent=function(encoded){
 };
 
 window.quickAddRecent=function(encoded){
-  const food=JSON.parse(decodeURIComponent(encoded));
-  const cat=document.getElementById('logCat').value||'breakfast';
-  const meal={cat,name:food.name,cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat,baseServing:1,baseCal:food.cal,baseProt:food.prot,baseCarb:food.carb,baseFat:food.fat,ts:Date.now()};
-  addMealToDay(meal);
-  // Show a brief toast confirmation instead of redirecting
-  showToast(food.name+' added to '+cat);
+  try {
+    const food=JSON.parse(decodeURIComponent(encoded));
+    const catEl=document.getElementById('logCat');
+    const cat=(catEl&&catEl.value)||'breakfast';
+    // Always add to today regardless of which day is being viewed
+    const key=today();
+    if(!dayCache[key])dayCache[key]={meals:[],water:0,date:key};
+    if(!dayCache[key].meals)dayCache[key].meals=[];
+    const meal={cat,name:food.name,cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat,baseServing:1,baseCal:food.cal,baseProt:food.prot,baseCarb:food.carb,baseFat:food.fat,ts:Date.now()};
+    dayCache[key].meals.push(meal);
+    summarizeDay(key);
+    // Re-render home if we're viewing today
+    if(currentDayOffset===0)renderHome();
+    soundLog();haptic(10);
+    showToast(food.name+' added to '+cat);
+    // Save in background
+    mergeAndSave(key, meal, 'add');
+    addToRecent(meal);
+  } catch(e) { console.error('quickAddRecent error:', e); }
 };
 
 // ── MY FOODS ───────────────────────────────────────────────────────────────
