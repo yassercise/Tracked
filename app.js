@@ -543,6 +543,12 @@ function openFoodDetail(food) {
   document.getElementById('fdName').textContent=food.name;
   const multEl=document.getElementById('fdMultiplier');if(multEl)multEl.value=1;
   document.getElementById('fdCat').value=document.getElementById('logCat').value||'breakfast';
+  // Update button label to show which day we're adding to
+  const addBtn=document.getElementById('fdAddBtn');
+  if(addBtn){
+    const label=currentDayOffset===0?'Add to Today':currentDayOffset===-1?'Add to Yesterday':'Add to '+offsetDate(currentDayOffset).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    addBtn.textContent=label;
+  }
   updateFoodDetailMacros();
   document.getElementById('foodDetailModal').classList.add('open');
 }
@@ -608,15 +614,18 @@ window.quickAddRecent=function(encoded){
     const food=JSON.parse(decodeURIComponent(encoded));
     const catEl=document.getElementById('logCat');
     const cat=(catEl&&catEl.value)||'breakfast';
-    const key=today();
+    // Use currently viewed day, not necessarily today
+    const key=dateStr(offsetDate(currentDayOffset));
     if(!dayCache[key])dayCache[key]={meals:[],water:0,date:key};
     if(!dayCache[key].meals)dayCache[key].meals=[];
     const meal={cat,name:food.name,cal:food.cal,prot:food.prot,carb:food.carb,fat:food.fat,baseServing:1,baseCal:food.cal,baseProt:food.prot,baseCarb:food.carb,baseFat:food.fat,ts:Date.now()};
     dayCache[key].meals.push(meal);
     summarizeDay(key);
-    if(currentDayOffset===0)renderHome();
+    renderHome();
+    renderMonthStrip();
     soundLog();haptic(10);
-    showToast(food.name+' added to '+cat);
+    const dayLabel=currentDayOffset===0?'today':currentDayOffset===-1?'yesterday':dateStr(offsetDate(currentDayOffset));
+    showToast(food.name+' added to '+cat+' · '+dayLabel);
     saveDay(key);
     addToRecent(meal);
   } catch(e){console.error('quickAdd error:',e);}
