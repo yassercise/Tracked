@@ -811,6 +811,18 @@ window.reanalyzeMeal=async function(){
     document.getElementById('scanEditFat').value=result.fat;
     document.getElementById('scanResultNotesLog').textContent=result.notes||'';
     document.getElementById('scanFeedback').value='';
+    // Update breakdown with re-analysis result
+    window._lastScanBreakdown = result.breakdown||[];
+    const bdWrap=document.getElementById('scanBreakdownLog');
+    const bdItems=document.getElementById('scanBreakdownItems');
+    if(bdWrap&&bdItems){
+      if(result.breakdown&&result.breakdown.length>0){
+        bdWrap.style.display='block';
+        bdItems.innerHTML=result.breakdown.map(item=>
+          `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--card-border);font-size:12px;"><div><span style="font-weight:700;">${item.item}</span><span style="color:var(--text-dim);margin-left:6px;">${item.weight}</span></div><div style="color:var(--text-dim);text-align:right;">${item.cal} kcal · P:${item.prot}g · C:${item.carb}g · F:${item.fat}g</div></div>`
+        ).join('');
+      } else {bdWrap.style.display='none';}
+    }
     soundLog();haptic(15);
   }catch(e){status.textContent='Re-analysis failed: '+e.message;}
 };
