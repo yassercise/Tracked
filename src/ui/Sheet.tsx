@@ -1,10 +1,12 @@
 import { AnimatePresence, motion } from 'motion/react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import './ui.css';
 
 /** Bottom sheet. Drag down or tap the backdrop to close. */
 export function Sheet({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: ReactNode; label: string }) {
-  return (
+  // Rendered at the top of the page so screen transitions never offset it.
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -30,6 +32,7 @@ export function Sheet({ open, onClose, children, label }: { open: boolean; onClo
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

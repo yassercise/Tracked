@@ -1,19 +1,25 @@
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { ArrowUp, Mic, Plus } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useDay } from '../../data/useDay';
 import { useFoods } from '../../data/useFoods';
 import { dayLong, fromKey, todayKey } from '../../lib/dates';
+import { analyze } from '../../lib/ai';
+import { sum } from '../../lib/macros';
 import { makeMeal } from '../../lib/meals';
-import { CATEGORIES, type Category, type Food } from '../../lib/types';
+import { speechSupported, useSpeech } from '../../lib/speech';
+import { CATEGORIES, type BreakdownItem, type Category, type Food } from '../../lib/types';
 import { Segmented } from '../../ui/Segmented';
 import { Sheet } from '../../ui/Sheet';
 import { Stepper } from '../../ui/Stepper';
 import { useToast } from '../../ui/Toast';
+import { Busy, ScanTab } from '../scan/ScanTab';
 import { FoodList } from './FoodList';
 import { FoodSheet } from './FoodSheet';
 import { EMPTY_DRAFT, MacroFields, draftMacros, type FoodDraft } from './MacroFields';
 import '../home/home.css';
 import './log.css';
+import '../scan/scan.css';
 
 type LogTab = 'recent' | 'saved' | 'manual' | 'scan';
 const TABS: { id: LogTab; label: string }[] = [
@@ -43,8 +49,8 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
   const dayLabel = `${fromKey(dateKey).toLocaleDateString('en-GB', { weekday: 'long' })} ${dayLong(dateKey)}`;
 
   /** Log one food. Recent always stores one serving, whatever was logged. */
-  const log = (food: Food, servings = 1) => {
-    addMeal(makeMeal(food, cat, servings));
+  const log = (food: Food, servings = 1, extra: { source?: string; breakdown?: BreakdownItem[] } = {}) => {
+    addMeal(makeMeal(food, cat, servings, extra));
     pushRecent(food);
     toast(`Added to ${catLabel}`);
   };
@@ -70,38 +76,48 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
 
       <Segmented options={TABS} value={tab} onChange={setTab} label="Log method" />
 
-      <div className="log-body">
-        {tab === 'recent' && (
-          <FoodList foods={recent} onQuickAdd={(f) => log(f)} onOpen={setOpen} empty={<p>Foods you log show up here, ready to add again in one tap.</p>} />
-        )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={tab} className="log-body" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
+          {tab === 'recent' && (
+            <FoodList foods={recent} onQuickAdd={(f) => log(f, 1, { source: 'recent' })} onOpen={setOpen} empty={<p>Foods you log show up here, ready to add again in one tap.</p>} />
+          )}
 
-        {tab === 'saved' && (
-          <FoodList
-            foods={saved}
-            onQuickAdd={(f) => log(f)}
-            onOpen={setOpen}
-            empty={<p>Save the foods you eat most to log them in one tap.</p>}
-            action={
-              <button className="new-food press" onClick={() => setCreating(true)}>
-                <Plus size={18} strokeWidth={2.4} /> New food
-              </button>
-            }
-          />
-        )}
+          {tab === 'saved' && (
+            <FoodList
+              foods={saved}
+              onQuickAdd={(f) => log(f, 1, { source: 'saved' })}
+              onOpen={setOpen}
+              empty={<p>Save the foods you eat most to log them in one tap.</p>}
+              action={
+                <button className="new-food press" onClick={() => setCreating(true)}>
+                  <Plus size={18} strokeWidth={2.4} /> New food
+                </button>
+              }
+            />
+          )}
 
-        {tab === 'manual' && (
-          <ManualEntry
-            catLabel={catLabel}
-            onAdd={(food, servings, keep) => {
-              log(food, servings);
-              if (keep && !isSaved(food)) saveFood(food);
-              onDone();
-            }}
-          />
-        )}
+          {tab === 'manual' && (
+            <ManualEntry
+              catLabel={catLabel}
+              onAdd={(food, servings, keep, extra) => {
+                log(food, servings, extra);
+                if (keep && !isSaved(food)) saveFood(food);
+                onDone();
+              }}
+            />
+          )}
 
-        {tab === 'scan' && <p className="log-empty">Photo scan and voice logging are built in the next step.</p>}
-      </div>
+          {tab === 'scan' && (
+            <ScanTab
+              catLabel={catLabel}
+              onAdd={(m) => {
+                log({ name: m.name, ...m.base }, m.servings, { source: 'scan', breakdown: m.breakdown });
+                onDone();
+              }}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       <FoodSheet
         food={open}
@@ -109,7 +125,7 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
         canSave={!!open && !isSaved(open)}
         onClose={() => setOpen(null)}
         onAdd={(f, servings) => {
-          log(f, servings);
+          log(f, servings, { source: isSaved(f) ? 'saved' : 'recent' });
           setOpen(null);
         }}
         onSave={(f) => {
@@ -131,22 +147,110 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
   );
 }
 
-function ManualEntry({ catLabel, onAdd }: { catLabel: string; onAdd: (food: Food, servings: number, keep: boolean) => void }) {
+type Extra = { source?: string; breakdown?: BreakdownItem[] };
+
+function ManualEntry({ catLabel, onAdd }: { catLabel: string; onAdd: (food: Food, servings: number, keep: boolean, extra: Extra) => void }) {
   const [draft, setDraft] = useState<FoodDraft>(EMPTY_DRAFT);
   const [servings, setServings] = useState(1);
   const [keep, setKeep] = useState(false);
+  const [said, setSaid] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  // Breakdown from the last voice/text fill. Dropped as soon as the numbers are edited by hand.
+  const [filled, setFilled] = useState<{ from: string; breakdown: BreakdownItem[] } | null>(null);
+  const saidRef = useRef('');
   const valid = draft.name.trim().length > 0;
+
+  const fill = async (text: string) => {
+    const description = text.trim();
+    if (!description || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const r = await analyze({ description });
+      const t = sum(r.breakdown); // totals always come from the breakdown
+      setDraft({ name: r.name, cal: String(t.cal), prot: String(t.prot), carb: String(t.carb), fat: String(t.fat) });
+      setFilled({ from: description, breakdown: r.breakdown });
+      setSaid('');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const speech = useSpeech({
+    onText: (t) => {
+      saidRef.current = t;
+      setSaid(t);
+    },
+    onEnd: (t) => void fill(t || saidRef.current),
+  });
 
   return (
     <form
       className="manual"
       onSubmit={(e) => {
         e.preventDefault();
-        if (valid) onAdd({ name: draft.name.trim(), ...draftMacros(draft) }, servings, keep);
+        if (valid) onAdd({ name: draft.name.trim(), ...draftMacros(draft) }, servings, keep, filled ? { source: 'voice', breakdown: filled.breakdown } : { source: 'manual' });
       }}
     >
-      <p className="manual-hint">Enter the macros for one serving.</p>
-      <MacroFields draft={draft} onChange={setDraft} />
+      <section className={`card describe${speech.listening ? ' listening' : ''}`}>
+        <h3>{speech.listening ? 'Listening…' : 'Say what you ate'}</h3>
+        <p>{speechSupported ? 'Tap the mic and speak, or type it. The form fills in for you.' : 'Type it, or use the mic on your keyboard. The form fills in for you.'}</p>
+        <div className="field-box">
+          <input
+            value={said}
+            onChange={(e) => setSaid(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                void fill(said);
+              }
+            }}
+            placeholder="200g chicken and rice"
+            aria-label="Describe what you ate"
+            enterKeyHint="go"
+            disabled={busy}
+          />
+          {speechSupported && (
+            <button type="button" className={`mic press${speech.listening ? ' on' : ''}`} aria-label={speech.listening ? 'Stop listening' : 'Speak'} aria-pressed={speech.listening} disabled={busy} onClick={speech.toggle}>
+              <Mic size={19} strokeWidth={2.2} />
+            </button>
+          )}
+          <button type="button" className="send press" aria-label="Fill in the form" disabled={!said.trim() || busy} onClick={() => void fill(said)}>
+            {busy ? <span className="spinner" /> : <ArrowUp size={19} strokeWidth={2.6} />}
+          </button>
+        </div>
+        {busy && <Busy label="Working out the macros" />}
+        {error && <p className="scan-error" role="alert">{error}</p>}
+      </section>
+
+      <p className="manual-hint">Macros for one serving.</p>
+      <MacroFields
+        draft={draft}
+        onChange={(d) => {
+          if (filled && (d.cal !== draft.cal || d.prot !== draft.prot || d.carb !== draft.carb || d.fat !== draft.fat)) setFilled(null);
+          setDraft(d);
+        }}
+      />
+
+      <AnimatePresence initial={false}>
+        {filled && (
+          <motion.div className="filled-from" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+            Filled in from "{filled.from}"
+            <ul>
+              {filled.breakdown.map((b, i) => (
+                <li key={i}>
+                  <span>{b.item} {b.weight}</span>
+                  <b className="num">{b.cal} kcal</b>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="msheet-row">
         <span>Servings</span>
         <Stepper value={servings} onChange={setServings} />

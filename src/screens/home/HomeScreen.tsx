@@ -7,6 +7,7 @@ import { dayLong, dayTitle, fromKey, monthKeys, shiftKey, todayKey } from '../..
 import { fmt, sum } from '../../lib/macros';
 import { hideSplash } from '../../lib/splash';
 import { CATEGORIES, GLASS_ML, type Category, type Meal, type Targets } from '../../lib/types';
+import { AnimatedNumber } from '../../ui/AnimatedNumber';
 import { useToast } from '../../ui/Toast';
 import { Dial } from './Dial';
 import { MealCard } from './MealCard';
@@ -168,12 +169,17 @@ export function HomeScreen({ dateKey, onDateChange, targets, onLog }: Props) {
 }
 
 function Macro({ label, value, target, tone }: { label: string; value: number; target: number; tone?: 'prot' }) {
-  const pct = Math.min(1, value / target);
+  const [live, setLive] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setLive(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  const pct = live ? Math.min(1, value / target) : 0;
   return (
     <div className={`macro${tone ? ` ${tone}` : ''}`}>
       <span className="macro-label">{label}</span>
       <span className="macro-value">
-        <span className="num">{fmt(value)}</span>
+        <span className="num"><AnimatedNumber value={value} /></span>
         <small> / {fmt(target)} g</small>
       </span>
       <span className="macro-bar"><span style={{ transform: `scaleX(${pct})` }} /></span>

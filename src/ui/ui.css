@@ -113,10 +113,10 @@
 .stepper { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: var(--r-pill); background: var(--glass); border: 1px solid var(--line); }
 .stepper button { width: 42px; height: 42px; border-radius: 50%; display: grid; place-content: center; background: var(--glass-hi); }
 .stepper button:disabled { opacity: 0.3; }
-.stepper .num { min-width: 54px; text-align: center; font-size: 19px; font-weight: 600; }
+.stepper .num { transition: transform 0.2s var(--spring); min-width: 54px; text-align: center; font-size: 19px; font-weight: 600; }
 .chips { display: flex; gap: 6px; overflow-x: auto; margin: 0 calc(var(--gutter) * -1); padding: 0 var(--gutter); scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
-.chip { flex: none; height: 40px; padding: 0 15px; border-radius: var(--r-pill); font-size: 14.5px; font-weight: 600; color: var(--text-2); background: var(--glass); border: 1px solid var(--line); }
+.chip { transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.28s var(--spring); flex: none; height: 40px; padding: 0 15px; border-radius: var(--r-pill); font-size: 14.5px; font-weight: 600; color: var(--text-2); background: var(--glass); border: 1px solid var(--line); }
 .chip[aria-checked='true'] { color: var(--amber); background: var(--amber-soft); border-color: rgba(255, 166, 48, 0.4); }
 .btn:disabled { opacity: 0.35; }
 
@@ -140,3 +140,11 @@
 /* Compact macro readout: kcal, P, C, F */
 .macro-line { display: flex; gap: 12px; font-size: 13.5px; color: var(--text-2); white-space: nowrap; margin-top: 1px; }
 .macro-line b { color: var(--text); font-weight: 500; }
+
+/* Mic */
+.mic { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-content: center; color: var(--amber); background: var(--amber-soft); }
+.mic.large { width: 64px; height: 64px; color: #1a0f00; background: linear-gradient(160deg, #ffc266, var(--amber) 45%, var(--amber-deep)); box-shadow: 0 10px 28px rgba(255, 140, 30, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+.mic.on { color: #1a0f00; background: var(--amber); }
+.mic.on::before, .mic.on::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--amber); animation: mic-ring 1.4s ease-out infinite; pointer-events: none; }
+.mic.on::after { animation-delay: 0.7s; }
+@keyframes mic-ring { from { transform: scale(1); opacity: 0.7; } to { transform: scale(1.9); opacity: 0; } }

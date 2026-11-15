@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { Coffee, Cookie, Moon, Plus, Sun, Sunrise, type LucideIcon } from 'lucide-react';
 import { fmt, fmtServings, sum } from '../../lib/macros';
 import type { Category, Meal } from '../../lib/types';
@@ -36,21 +37,31 @@ export function MealCard({ cat, label, meals, onAdd, onOpen }: Props) {
           <Plus size={20} strokeWidth={2.4} />
         </button>
       </header>
-      {meals.length > 0 && (
-        <ul className="meal-list">
-          {meals.map((m) => (
-            <li key={m.id}>
-              <button className="meal-row press" onClick={() => onOpen(m)}>
-                <span className="meal-name">
-                  {m.name}
-                  {m.servings !== 1 && <small> {fmtServings(m.servings)}</small>}
-                </span>
-                <span className="meal-cal num">{fmt(m.cal)}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="meal-list">
+        <AnimatePresence>
+          {meals.map((m) => {
+            // A meal logged in the last few seconds slides in with an amber flash, so you see where it landed.
+            const fresh = Date.now() - m.ts < 5000;
+            return (
+              <motion.li
+                key={m.id}
+                initial={fresh ? { opacity: 0, height: 0, backgroundColor: 'rgba(255, 166, 48, 0.28)' } : false}
+                animate={{ opacity: 1, height: 'auto', backgroundColor: 'rgba(255, 166, 48, 0)' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: 'spring', stiffness: 360, damping: 32, backgroundColor: { duration: 1.4, delay: 0.2 } }}
+              >
+                <button className="meal-row press" onClick={() => onOpen(m)}>
+                  <span className="meal-name">
+                    {m.name}
+                    {m.servings !== 1 && <small> {fmtServings(m.servings)}</small>}
+                  </span>
+                  <span className="meal-cal num">{fmt(m.cal)}</span>
+                </button>
+              </motion.li>
+            );
+          })}
+        </AnimatePresence>
+      </ul>
     </section>
   );
 }

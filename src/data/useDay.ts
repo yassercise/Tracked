@@ -4,6 +4,9 @@ import { dayRef } from '../lib/paths';
 import type { DayDoc, Meal } from '../lib/types';
 import { DEMO, demoDay } from './demo';
 
+// Demo mode keeps its edits in memory so flows can be tried end to end.
+const demoStore: Record<string, DayDoc> = {};
+
 const empty = (key: string): DayDoc => ({ meals: [], water: 0, date: key });
 
 /** Meals written by the original app have no id or servings field. */
@@ -36,7 +39,7 @@ export function useDay(key: string) {
 
   useEffect(() => {
     if (DEMO) {
-      latest.current = demoDay(key);
+      latest.current = demoStore[key] ?? demoDay(key);
       setState({ key, day: latest.current, ready: true });
       return;
     }
@@ -57,7 +60,10 @@ export function useDay(key: string) {
     (next: DayDoc) => {
       latest.current = next;
       setState({ key, day: next, ready: true });
-      if (DEMO) return;
+      if (DEMO) {
+        demoStore[key] = next;
+        return;
+      }
       void setDoc(dayRef(key), clean({ meals: next.meals, water: next.water, date: key }), { merge: true });
     },
     [key]

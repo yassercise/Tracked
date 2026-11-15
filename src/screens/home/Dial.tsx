@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { fmt } from '../../lib/macros';
+import { AnimatedNumber } from '../../ui/AnimatedNumber';
 
 const C = 150;
 const START = 135; // degrees; the dial opens at the bottom
@@ -20,8 +22,14 @@ interface Props {
 
 /** The two numbers that decide the day: calories on the outer arc, protein on the inner one. */
 export function Dial({ cal, calTarget, prot, protTarget }: Props) {
-  const calPct = Math.min(1, cal / calTarget);
-  const protPct = Math.min(1, prot / protTarget);
+  // Arcs start empty and sweep to their value when the dial first appears.
+  const [live, setLive] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setLive(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  const calPct = live ? Math.min(1, cal / calTarget) : 0;
+  const protPct = live ? Math.min(1, prot / protTarget) : 0;
   const left = calTarget - cal;
 
   return (
@@ -39,7 +47,7 @@ export function Dial({ cal, calTarget, prot, protTarget }: Props) {
           const deg = START + (i / (TICKS.length - 1)) * SWEEP;
           const [x1, y1] = pt(deg, 139);
           const [x2, y2] = pt(deg, 145);
-          const lit = cal > 0 && i / (TICKS.length - 1) <= calPct;
+          const lit = calPct > 0 && i / (TICKS.length - 1) <= calPct;
           return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} className={lit ? 'dial-tick lit' : 'dial-tick'} style={{ transitionDelay: `${i * 9}ms` }} />;
         })}
 
@@ -51,7 +59,7 @@ export function Dial({ cal, calTarget, prot, protTarget }: Props) {
       </svg>
 
       <div className="dial-center">
-        <span className="dial-value num">{fmt(cal)}</span>
+        <span className="dial-value num"><AnimatedNumber value={cal} duration={900} /></span>
         <span className="dial-of">of {fmt(calTarget)} kcal</span>
       </div>
 

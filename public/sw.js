@@ -1,6 +1,6 @@
 /* Tracked service worker — app shell only.
    Firestore handles its own offline data; /api calls are never cached. */
-const VERSION = 'tracked-v2-2';
+const VERSION = 'tracked-v2-3';
 const SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-180.png', '/logo.png'];
 
 self.addEventListener('install', (event) => {
