@@ -19,7 +19,16 @@ export function MealCard({ cat, label, meals, onAdd, onOpen }: Props) {
     <section className="card meal-card">
       <header className="meal-head">
         <span className="meal-icon"><Icon size={18} strokeWidth={2.1} /></span>
-        <h2>{label}</h2>
+        <div className="meal-title">
+          <h2>{label}</h2>
+          {meals.length > 0 && (
+            <p className="macro-line">
+              <span>P <b className="num">{fmt(total.prot)}</b></span>
+              <span>C <b className="num">{fmt(total.carb)}</b></span>
+              <span>F <b className="num">{fmt(total.fat)}</b></span>
+            </p>
+          )}
+        </div>
         {meals.length > 0 && (
           <span className="meal-total"><span className="num">{fmt(total.cal)}</span> kcal</span>
         )}
@@ -32,11 +41,11 @@ export function MealCard({ cat, label, meals, onAdd, onOpen }: Props) {
           {meals.map((m) => (
             <li key={m.id}>
               <button className="meal-row press" onClick={() => onOpen(m)}>
-                <span className="meal-name">{m.name}</span>
-                <span className="meal-cal num">{fmt(m.cal)}</span>
-                <span className="meal-sub">
-                  {fmt(m.prot)} g protein{m.servings !== 1 ? `, ${fmtServings(m.servings)} serving` : ''}
+                <span className="meal-name">
+                  {m.name}
+                  {m.servings !== 1 && <small> {fmtServings(m.servings)}</small>}
                 </span>
+                <span className="meal-cal num">{fmt(m.cal)}</span>
               </button>
             </li>
           ))}

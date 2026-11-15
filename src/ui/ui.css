@@ -136,3 +136,7 @@
 .field-box input::placeholder { color: var(--text-3); font-weight: 500; }
 .field-box small { font-size: 14px; color: var(--text-3); margin-left: 8px; }
 .field-box svg { color: var(--text-3); margin-right: 10px; flex: none; }
+
+/* Compact macro readout: kcal, P, C, F */
+.macro-line { display: flex; gap: 12px; font-size: 13.5px; color: var(--text-2); white-space: nowrap; margin-top: 1px; }
+.macro-line b { color: var(--text); font-weight: 500; }

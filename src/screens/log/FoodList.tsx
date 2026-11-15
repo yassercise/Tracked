@@ -45,8 +45,11 @@ export function FoodList({ foods, empty, onQuickAdd, onOpen, action }: Props) {
             <li key={f.id ?? `${f.name}-${i}`}>
               <button className="food-row press" onClick={() => onOpen(f)}>
                 <span className="food-name">{f.name}</span>
-                <span className="food-sub">
-                  <span className="num">{fmt(f.cal)}</span> kcal, <span className="num">{fmt(f.prot)}</span> g protein
+                <span className="macro-line">
+                  <span><b className="num kcal">{fmt(f.cal)}</b> kcal</span>
+                  <span>P <b className="num">{fmt(f.prot)}</b></span>
+                  <span>C <b className="num">{fmt(f.carb)}</b></span>
+                  <span>F <b className="num">{fmt(f.fat)}</b></span>
                 </span>
               </button>
               <button className="meal-add press" aria-label={`Add ${f.name}`} onClick={() => onQuickAdd(f)}>

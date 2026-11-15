@@ -15,8 +15,7 @@
 .food-list li + li { border-top: 1px solid var(--line); }
 .food-row { flex: 1; min-width: 0; text-align: left; display: grid; gap: 2px; padding: 12px 10px; border-radius: 12px; }
 .food-name { font-size: 15.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.food-sub { font-size: 13.5px; color: var(--text-2); }
-.food-sub .num { color: var(--text); font-weight: 500; }
+.macro-line b.kcal { color: var(--amber); }
 
 .manual { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 .manual-hint { font-size: 14.5px; color: var(--text-2); }
