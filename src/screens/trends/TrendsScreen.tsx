@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { useRange, type DaySummary } from '../../data/useRange';
 import { dayLong, dayNumber, lastDays, monthKeys, monthYear, rangeLabel, shiftKey, shiftMonth, todayKey, weekdayShort } from '../../lib/dates';
 import { dayStatus, fmt } from '../../lib/macros';
@@ -147,6 +147,38 @@ function Chart({ title, unit, tone, keys, days, value, target, selected, onSelec
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // Drag a finger across the chart to move the selection from bar to bar; a tap still selects one,
+  // and tapping the selected bar clears it.
+  const plot = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ startKey: string; wasSelected: boolean; moved: boolean } | null>(null);
+  const keyAt = (clientX: number): string | null => {
+    const box = plot.current?.getBoundingClientRect();
+    if (!box) return null;
+    const i = Math.min(keys.length - 1, Math.max(0, Math.floor(((clientX - box.left) / box.width) * keys.length)));
+    const past = keys.filter((k) => k <= today);
+    if (!past.length) return null;
+    return keys[i] <= today ? keys[i] : past[past.length - 1];
+  };
+  const onDown = (e: PointerEvent<HTMLDivElement>) => {
+    const k = keyAt(e.clientX);
+    if (!k) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { startKey: k, wasSelected: selected === k, moved: false };
+    onSelect(k);
+  };
+  const onMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!drag.current) return;
+    const k = keyAt(e.clientX);
+    if (!k || k === selected) return;
+    drag.current.moved = true;
+    onSelect(k);
+  };
+  const onUp = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (d && !d.moved && d.wasSelected) onSelect(null);
+  };
+
   const values = keys.map((k) => (days[k] ? value(days[k]) : 0));
   const max = Math.max(target * 1.18, ...values) || 1;
   const month = keys.length > 7;
@@ -167,7 +199,7 @@ function Chart({ title, unit, tone, keys, days, value, target, selected, onSelec
           )}
         </span>
       </header>
-      <div className="plot">
+      <div className="plot" ref={plot} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
         <div className="target-line" style={{ bottom: `${(target / max) * 100}%` }} />
         {keys.map((k, i) => {
           const v = values[i];
