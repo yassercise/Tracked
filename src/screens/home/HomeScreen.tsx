@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Droplet, Flame } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDay } from '../../data/useDay';
 import { useRange } from '../../data/useRange';
 import { dayLong, dayTitle, fromKey, monthKeys, shiftKey, todayKey } from '../../lib/dates';
 import { fmt, sum } from '../../lib/macros';
+import { hideSplash } from '../../lib/splash';
 import { CATEGORIES, GLASS_ML, type Category, type Meal, type Targets } from '../../lib/types';
 import { useToast } from '../../ui/Toast';
 import { Dial } from './Dial';
@@ -33,7 +34,12 @@ export function HomeScreen({ dateKey, onDateChange, targets, onLog }: Props) {
   const toast = useToast();
   const [editing, setEditing] = useState<Meal | null>(null);
 
-  const { day, updateMeal, removeMeal, setWater } = useDay(dateKey);
+  const { day, ready, updateMeal, removeMeal, setWater } = useDay(dateKey);
+
+  // Lift the loading screen once the day's data has arrived.
+  useEffect(() => {
+    if (ready) hideSplash();
+  }, [ready]);
   const keys = useMemo(() => monthKeys(dateKey), [dateKey.slice(0, 7)]);
   const summaries = useRange(keys[0], keys[keys.length - 1]);
 
