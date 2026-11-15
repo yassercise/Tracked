@@ -1,0 +1,38 @@
+:root {
+  /* Colour */
+  --bg: #0a0b0f;
+  --bg-raised: #14151b;
+  --text: #f4f1ea;
+  --text-2: rgba(244, 241, 234, 0.62);
+  --text-3: rgba(244, 241, 234, 0.36);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-hi: rgba(255, 255, 255, 0.08);
+
+  --amber: #ffa630;        /* calories, primary actions */
+  --amber-deep: #ff7d1a;
+  --amber-soft: rgba(255, 166, 48, 0.14);
+  --cream: #f6e3c0;        /* protein */
+  --neutral-bar: rgba(244, 241, 234, 0.46); /* carbs, fat */
+  --water: #7cc4ff;
+  --danger: #ff6b5e;
+
+  /* Type */
+  --font-display: 'Sora Variable', system-ui, sans-serif;
+  --font-body: 'Hanken Grotesk Variable', system-ui, -apple-system, sans-serif;
+
+  /* Shape */
+  --r-card: 24px;
+  --r-inner: 14px;
+  --r-pill: 999px;
+  --gutter: 20px;
+
+  /* Motion */
+  --spring: cubic-bezier(0.22, 1.2, 0.36, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tabbar-h: 64px;
+}

@@ -1,0 +1,34 @@
+.log-past { color: var(--amber) !important; font-weight: 600; }
+.log-cats { margin-top: 18px; margin-bottom: 14px; }
+.log-cats .chip { flex: 1 1 auto; padding: 0 9px; font-size: 13.5px; }
+.log-body { margin-top: 16px; }
+
+.log-tools { display: flex; gap: 8px; margin-bottom: 12px; }
+.log-search { flex: 1; min-width: 0; height: 48px; }
+.log-search input { font-weight: 500; }
+.new-food { flex: none; display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 16px; border-radius: 16px; font-size: 14.5px; font-weight: 700; color: var(--amber); background: var(--amber-soft); }
+
+.log-empty { display: grid; justify-items: center; gap: 16px; text-align: center; color: var(--text-2); padding: 48px 24px; font-size: 15.5px; }
+
+.food-list { list-style: none; margin: 0; padding: 0 6px; }
+.food-list li { display: flex; align-items: center; gap: 8px; padding-right: 6px; }
+.food-list li + li { border-top: 1px solid var(--line); }
+.food-row { flex: 1; min-width: 0; text-align: left; display: grid; gap: 2px; padding: 12px 10px; border-radius: 12px; }
+.food-name { font-size: 15.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.food-sub { font-size: 13.5px; color: var(--text-2); }
+.food-sub .num { color: var(--text); font-weight: 500; }
+
+.manual { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.manual-hint { font-size: 14.5px; color: var(--text-2); }
+.fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.field-wide { grid-column: 1 / -1; }
+
+.switch-row { display: flex; align-items: center; justify-content: space-between; font-weight: 600; position: relative; min-height: 44px; }
+.switch-row input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.switch-row i { width: 52px; height: 32px; border-radius: 16px; background: rgba(255, 255, 255, 0.14); position: relative; transition: background 0.25s; flex: none; }
+.switch-row i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: transform 0.3s var(--spring); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
+.switch-row input:checked + i { background: var(--amber); }
+.switch-row input:checked + i::after { transform: translateX(20px); }
+.switch-row input:focus-visible + i { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+.btn-plain { height: 46px; font-weight: 600; font-size: 15px; color: var(--amber); }
