@@ -30,7 +30,7 @@ export async function analyze(input: AnalyzeInput): Promise<ScanResult> {
     throw new Error("Couldn't reach the server. Check your connection and try again.");
   }
   const body = await res.json().catch(() => null);
-  if (!res.ok || !body?.breakdown) throw new Error(body?.error ? `${body.error}. Try again.` : 'The scan failed. Try again.');
+  if (!res.ok || !body?.breakdown) throw new Error(body?.error ? `${String(body.error).replace(/\.$/, '')}. Try again.` : 'The scan failed. Try again.');
   return body as ScanResult;
 }
 

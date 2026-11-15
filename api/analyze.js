@@ -25,6 +25,8 @@ Rules:
 - The meal name is short and plain, like "Chicken and rice" or "Beef burger with fries".
 - Notes: one short sentence on the biggest source of uncertainty, or an empty string when the user gave exact weights.
 
+Always answer by calling the report_meal tool exactly once. Never answer in plain text, even if the photo is unclear: give your best estimate and say what was unclear in the notes.
+
 When you are given a previous estimate and a correction, apply the correction and return the complete updated list of items, including the ones that did not change.`;
 
 const TOOL = {
@@ -49,10 +51,12 @@ const TOOL = {
             fat: { type: 'integer' },
           },
           required: ['item', 'weight', 'cal', 'prot', 'carb', 'fat'],
+          additionalProperties: false,
         },
       },
     },
     required: ['name', 'notes', 'breakdown'],
+    additionalProperties: false,
   },
 };
 
@@ -96,10 +100,11 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 2000,
+        max_tokens: 6000, // leaves room for the model's own reasoning before it answers
         system: SYSTEM,
         tools: [TOOL],
-        tool_choice: { type: 'tool', name: TOOL.name },
+        // Current Claude models reject a forced tool_choice, so the prompt asks for the tool instead.
+        tool_choice: { type: 'auto' },
         messages: [{ role: 'user', content }],
       }),
     });
@@ -107,13 +112,17 @@ export default async function handler(req, res) {
     if (!r.ok) {
       const detail = await r.text();
       console.error('Anthropic API error', r.status, detail);
-      return res.status(502).json({ error: `Claude API error (${r.status})`, detail: detail.slice(0, 400) });
+      let message = '';
+      try {
+        message = JSON.parse(detail)?.error?.message || '';
+      } catch {}
+      return res.status(502).json({ error: `Claude API error (${r.status})${message ? `: ${message.slice(0, 200)}` : ''}` });
     }
 
     const data = await r.json();
     const out = (data.content || []).find((c) => c.type === 'tool_use')?.input;
     if (!out || !Array.isArray(out.breakdown) || !out.breakdown.length) {
-      return res.status(502).json({ error: 'Claude did not return a breakdown' });
+      return res.status(502).json({ error: "Claude didn't return a breakdown" });
     }
 
     return res.status(200).json({
