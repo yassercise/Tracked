@@ -1,0 +1,37 @@
+.trends-seg { margin: 18px 0 14px; }
+
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 16px 4px; margin-bottom: 12px; }
+.stats > div { display: grid; gap: 3px; padding: 0 14px; }
+.stats > div + div { border-left: 1px solid var(--line); }
+.stat-label { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.stat-label.prot { color: var(--cream); }
+.stat-value { font-size: 22px; font-weight: 600; white-space: nowrap; }
+.stat-value small { font-size: 13px; font-weight: 500; color: var(--text-3); }
+.stat-sub { font-size: 12.5px; color: var(--text-3); white-space: nowrap; }
+
+.chart { padding: 16px 16px 12px; margin-bottom: 12px; }
+.chart header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.chart h2 { font-size: 16px; font-weight: 700; }
+.chart-read { font-size: 13.5px; color: var(--text-2); white-space: nowrap; }
+.chart-read b { color: var(--text); font-weight: 600; font-size: 15px; }
+
+.plot { position: relative; display: flex; align-items: stretch; gap: 8px; height: 150px; }
+.chart.dense .plot { gap: 3px; }
+.target-line { position: absolute; left: -4px; right: -4px; height: 0; border-top: 1.5px dashed rgba(244, 241, 234, 0.3); pointer-events: none; z-index: 1; }
+
+.bar { flex: 1; min-width: 0; display: flex; align-items: flex-end; border-radius: 8px; transition: opacity 0.2s; }
+.bar span { display: block; width: 100%; border-radius: 7px 7px 3px 3px; background: rgba(255, 166, 48, 0.3); transition: height 0.7s var(--ease-out), background 0.2s; }
+.chart.dense .bar span { border-radius: 3px 3px 1px 1px; }
+.bar.hit span { background: linear-gradient(180deg, #ffc266, var(--amber) 60%, var(--amber-deep)); box-shadow: 0 0 14px rgba(255, 150, 40, 0.3); }
+.chart.prot .bar span { background: rgba(246, 227, 192, 0.26); }
+.chart.prot .bar.hit span { background: linear-gradient(180deg, #fff3da, var(--cream)); box-shadow: 0 0 14px rgba(246, 227, 192, 0.22); }
+.bar.dim { opacity: 0.4; }
+.bar:disabled { opacity: 0.25; }
+
+.axis { display: flex; gap: 8px; margin-top: 8px; }
+.chart.dense .axis { gap: 3px; }
+.axis span { flex: 1; min-width: 0; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--text-3); overflow: visible; white-space: nowrap; }
+.axis span.now { color: var(--amber); }
+
+.open-day { width: 100%; }
+.trends-empty { text-align: center; color: var(--text-2); font-size: 15px; padding: 14px 0; }

@@ -45,3 +45,25 @@ export function dayLong(key: string): string {
   const year = d.getFullYear() === new Date().getFullYear() ? '' : ` ${d.getFullYear()}`;
   return `${d.getDate()} ${MONTH[d.getMonth()]}${year}`;
 }
+
+/** The `count` days ending on `key`, oldest first. */
+export function lastDays(key: string, count: number): string[] {
+  return Array.from({ length: count }, (_, i) => shiftKey(key, i - (count - 1)));
+}
+
+/** Same day-of-month in another month, clamped to that month's length. */
+export function shiftMonth(key: string, months: number): string {
+  const d = fromKey(key);
+  const first = new Date(d.getFullYear(), d.getMonth() + months, 1);
+  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  return keyOf(new Date(first.getFullYear(), first.getMonth(), Math.min(d.getDate(), last)));
+}
+
+/** "9 – 15 November" or "30 November – 6 December". */
+export function rangeLabel(start: string, end: string): string {
+  const a = fromKey(start);
+  const b = fromKey(end);
+  return a.getMonth() === b.getMonth() ? `${a.getDate()} – ${b.getDate()} ${MONTH[b.getMonth()]}` : `${a.getDate()} ${MONTH[a.getMonth()]} – ${b.getDate()} ${MONTH[b.getMonth()]}`;
+}
+
+export const monthYear = (key: string) => `${MONTH[fromKey(key).getMonth()]} ${fromKey(key).getFullYear()}`;

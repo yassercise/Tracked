@@ -1,0 +1,15 @@
+.settings .home-head { margin-bottom: 18px; }
+.set-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 18px 16px; margin-bottom: 12px; }
+.set-card h2 { font-size: 17px; font-weight: 700; }
+.set-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.set-head .new-food { height: 40px; padding: 0 14px; }
+.set-count { font-size: 13.5px; color: var(--text-3); }
+.set-note { font-size: 13.5px; color: var(--text-2); padding: 10px 12px; border-radius: 12px; background: var(--amber-soft); }
+.set-water span { display: grid; gap: 2px; }
+.set-water small { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.set-empty { font-size: 14.5px; color: var(--text-2); }
+.set-foods { list-style: none; margin: -6px -8px; padding: 0; }
+.set-foods li + li { border-top: 1px solid var(--line); }
+.set-foods .food-row { width: 100%; }
+.btn-soft:disabled { opacity: 0.4; }
+.set-foot { text-align: center; font-size: 13px; color: var(--text-3); padding: 10px 0; }

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowUp, Mic, Plus } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDay } from '../../data/useDay';
 import { useFoods } from '../../data/useFoods';
 import { dayLong, fromKey, todayKey } from '../../lib/dates';
@@ -10,11 +10,11 @@ import { makeMeal } from '../../lib/meals';
 import { speechSupported, useSpeech } from '../../lib/speech';
 import { CATEGORIES, type BreakdownItem, type Category, type Food, type Targets } from '../../lib/types';
 import { Segmented } from '../../ui/Segmented';
-import { Sheet } from '../../ui/Sheet';
 import { Stepper } from '../../ui/Stepper';
 import { useToast } from '../../ui/Toast';
 import { Busy, ScanTab } from '../scan/ScanTab';
 import { FoodList } from './FoodList';
+import { FoodFormSheet } from './FoodFormSheet';
 import { FoodSheet, type FoodKind } from './FoodSheet';
 import { EMPTY_DRAFT, MacroFields, draftMacros, type FoodDraft } from './MacroFields';
 import '../home/home.css';
@@ -295,36 +295,5 @@ function ManualEntry({ catLabel, onAdd }: { catLabel: string; onAdd: (food: Food
       </label>
       <button className="btn btn-primary press" disabled={!valid}>Add to {catLabel}</button>
     </form>
-  );
-}
-
-function FoodFormSheet({ editing, onClose, onSave }: { editing: Food | 'new' | null; onClose: () => void; onSave: (f: Food) => void }) {
-  const [draft, setDraft] = useState<FoodDraft>(EMPTY_DRAFT);
-  const [mode, setMode] = useState<Food | 'new'>('new'); // kept while the sheet animates out
-  const valid = draft.name.trim().length > 0;
-
-  useEffect(() => {
-    if (!editing) return;
-    setMode(editing);
-    setDraft(editing === 'new' ? EMPTY_DRAFT : { name: editing.name, cal: String(editing.cal), prot: String(editing.prot), carb: String(editing.carb), fat: String(editing.fat) });
-  }, [editing]);
-
-  const isEdit = mode !== 'new';
-  return (
-    <Sheet open={!!editing} onClose={onClose} label={isEdit ? 'Edit food' : 'New food'}>
-      <form
-        className="msheet"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!valid) return;
-          onSave({ ...(isEdit && mode.id ? { id: mode.id } : {}), name: draft.name.trim(), ...draftMacros(draft) });
-        }}
-      >
-        <h2 className="msheet-name">{isEdit ? 'Edit food' : 'New food'}</h2>
-        <p className="manual-hint">Enter the macros for one serving.</p>
-        <MacroFields draft={draft} onChange={setDraft} />
-        <button className="btn btn-primary press" disabled={!valid}>{isEdit ? 'Save changes' : 'Save food'}</button>
-      </form>
-    </Sheet>
   );
 }

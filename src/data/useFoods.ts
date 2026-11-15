@@ -48,6 +48,13 @@ export function useFoods() {
     if (!DEMO) void setDoc(recentRef(), { items: next });
   }, []);
 
+  /** Replace the whole Recent list (used for Clear and its Undo). */
+  const setRecentList = useCallback((items: Food[]) => {
+    recentLatest.current = items;
+    setRecent(items);
+    if (!DEMO) void setDoc(recentRef(), { items });
+  }, []);
+
   const saveFood = useCallback((food: Food) => {
     const data = { name: food.name.trim(), cal: food.cal, prot: food.prot, carb: food.carb, fat: food.fat, ...(food.icon ? { icon: food.icon } : {}) };
     if (DEMO) return setSaved((s) => [...s.filter((f) => f.id !== food.id), { ...data, id: food.id ?? String(Date.now()) }]);
@@ -60,5 +67,5 @@ export function useFoods() {
     void deleteDoc(foodRef(id));
   }, []);
 
-  return { recent, saved, pushRecent, removeRecent, saveFood, deleteFood };
+  return { recent, saved, pushRecent, removeRecent, setRecentList, saveFood, deleteFood };
 }

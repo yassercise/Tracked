@@ -8,12 +8,14 @@ import { TabBar, type Tab } from './ui/TabBar';
 import { ToastProvider } from './ui/Toast';
 import { HomeScreen } from './screens/home/HomeScreen';
 import { LogScreen } from './screens/log/LogScreen';
+import { SettingsScreen } from './screens/settings/SettingsScreen';
+import { TrendsScreen } from './screens/trends/TrendsScreen';
 
 export function App() {
   const [tab, setTab] = useState<Tab>('home');
   const [dateKey, setDateKey] = useState(todayKey);
   const [logCat, setLogCat] = useState<Category>(categoryForNow);
-  const { targets } = useSettings();
+  const { targets, saveTargets } = useSettings();
 
   // Each screen starts at the top.
   useEffect(() => {
@@ -33,17 +35,15 @@ export function App() {
             {tab === 'home' && <HomeScreen dateKey={dateKey} onDateChange={setDateKey} targets={targets} onLog={openLog} />}
             {tab === 'log' && <LogScreen dateKey={dateKey} cat={logCat} targets={targets} onCatChange={setLogCat} onDone={() => setTab('home')} />}
             {tab === 'trends' && (
-              <main className="screen placeholder">
-                <h1>Trends</h1>
-                <p>Weekly and monthly charts come after Log.</p>
-              </main>
+              <TrendsScreen
+                targets={targets}
+                onOpenDay={(key) => {
+                  setDateKey(key);
+                  setTab('home');
+                }}
+              />
             )}
-            {tab === 'settings' && (
-              <main className="screen placeholder">
-                <h1>Settings</h1>
-                <p>Targets and saved foods come last.</p>
-              </main>
-            )}
+            {tab === 'settings' && <SettingsScreen targets={targets} onSave={saveTargets} />}
           </motion.div>
         </AnimatePresence>
         <TabBar tab={tab} onChange={(t) => (t === 'log' ? openLog(null) : setTab(t))} />
