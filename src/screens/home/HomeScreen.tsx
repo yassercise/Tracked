@@ -1,10 +1,12 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Droplet, Flame } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useDay } from '../../data/useDay';
+import { addMealToDay, useDay } from '../../data/useDay';
+import { useFoods } from '../../data/useFoods';
 import { useRange } from '../../data/useRange';
 import { dayLong, dayTitle, fromKey, monthKeys, shiftKey, todayKey } from '../../lib/dates';
 import { fmt, sum } from '../../lib/macros';
+import { makeMeal } from '../../lib/meals';
 import { hideSplash } from '../../lib/splash';
 import { CATEGORIES, GLASS_ML, type Category, type Meal, type Targets } from '../../lib/types';
 import { AnimatedNumber } from '../../ui/AnimatedNumber';
@@ -35,7 +37,8 @@ export function HomeScreen({ dateKey, onDateChange, targets, onLog }: Props) {
   const toast = useToast();
   const [editing, setEditing] = useState<Meal | null>(null);
 
-  const { day, ready, updateMeal, removeMeal, setWater } = useDay(dateKey);
+  const { day, ready, addMeal, updateMeal, removeMeal, setWater } = useDay(dateKey);
+  const { saved, saveFood } = useFoods();
 
   // Lift the loading screen once the day's data has arrived.
   useEffect(() => {
@@ -152,6 +155,7 @@ export function HomeScreen({ dateKey, onDateChange, targets, onLog }: Props) {
 
       <MealSheet
         meal={editing}
+        isToday={isToday}
         onClose={() => setEditing(null)}
         onSave={(m) => {
           updateMeal(m);
@@ -161,7 +165,19 @@ export function HomeScreen({ dateKey, onDateChange, targets, onLog }: Props) {
         onDelete={(m) => {
           removeMeal(m.id);
           setEditing(null);
-          toast('Meal deleted');
+          toast('Meal deleted', { label: 'Undo', onClick: () => addMeal(m) });
+        }}
+        onLogAgain={(m) => {
+          const copy = makeMeal({ name: m.name, cal: m.baseCal, prot: m.baseProt, carb: m.baseCarb, fat: m.baseFat }, m.cat, m.servings, { source: m.source, breakdown: m.breakdown, icon: m.icon });
+          if (isToday) addMeal(copy);
+          else addMealToDay(today, copy);
+          setEditing(null);
+          toast(isToday ? 'Logged again' : 'Logged to today');
+        }}
+        onSaveFood={(m) => {
+          if (saved.some((f) => f.name.toLowerCase() === m.name.toLowerCase())) return toast('Already in My foods');
+          saveFood({ name: m.name, cal: m.baseCal, prot: m.baseProt, carb: m.baseCarb, fat: m.baseFat, icon: m.icon });
+          toast('Saved to My foods');
         }}
       />
     </main>

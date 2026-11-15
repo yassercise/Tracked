@@ -1,21 +1,21 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowUp, Mic, Plus } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDay } from '../../data/useDay';
 import { useFoods } from '../../data/useFoods';
 import { dayLong, fromKey, todayKey } from '../../lib/dates';
 import { analyze } from '../../lib/ai';
-import { sum } from '../../lib/macros';
+import { fmt, sum } from '../../lib/macros';
 import { makeMeal } from '../../lib/meals';
 import { speechSupported, useSpeech } from '../../lib/speech';
-import { CATEGORIES, type BreakdownItem, type Category, type Food } from '../../lib/types';
+import { CATEGORIES, type BreakdownItem, type Category, type Food, type Targets } from '../../lib/types';
 import { Segmented } from '../../ui/Segmented';
 import { Sheet } from '../../ui/Sheet';
 import { Stepper } from '../../ui/Stepper';
 import { useToast } from '../../ui/Toast';
 import { Busy, ScanTab } from '../scan/ScanTab';
 import { FoodList } from './FoodList';
-import { FoodSheet } from './FoodSheet';
+import { FoodSheet, type FoodKind } from './FoodSheet';
 import { EMPTY_DRAFT, MacroFields, draftMacros, type FoodDraft } from './MacroFields';
 import '../home/home.css';
 import './log.css';
@@ -32,17 +32,34 @@ const TABS: { id: LogTab; label: string }[] = [
 interface Props {
   dateKey: string;
   cat: Category;
+  targets: Targets;
   onCatChange: (cat: Category) => void;
   onDone: () => void;
 }
 
-export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
+export function LogScreen({ dateKey, cat, targets, onCatChange, onDone }: Props) {
   const toast = useToast();
-  const { addMeal } = useDay(dateKey);
-  const { recent, saved, pushRecent, saveFood } = useFoods();
+  const { day, addMeal } = useDay(dateKey);
+  const { recent, saved, pushRecent, removeRecent, saveFood, deleteFood } = useFoods();
   const [tab, setTab] = useState<LogTab>('recent');
-  const [open, setOpen] = useState<Food | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [open, setOpen] = useState<{ food: Food; kind: FoodKind } | null>(null);
+  const [openKind, setOpenKind] = useState<FoodKind>('recent');
+  // null = closed, 'new' = creating, a Food = editing that saved food
+  const [form, setForm] = useState<Food | 'new' | null>(null);
+
+  const openFood = (food: Food, kind: FoodKind) => {
+    setOpenKind(kind);
+    setOpen({ food, kind });
+  };
+
+  // What is still needed to hit the day's targets, so it's visible while choosing food.
+  const eaten = sum(day.meals);
+  const calLeft = targets.cal - eaten.cal;
+  const protLeft = targets.prot - eaten.prot;
+  const leftText =
+    calLeft <= 0 && protLeft <= 0
+      ? 'Calories and protein hit'
+      : [calLeft > 0 ? `${fmt(calLeft)} kcal` : '', protLeft > 0 ? `${fmt(protLeft)} g protein` : ''].filter(Boolean).join(' and ') + ' to go';
 
   const catLabel = CATEGORIES.find((c) => c.id === cat)!.label;
   const isToday = dateKey === todayKey();
@@ -50,7 +67,7 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
 
   /** Log one food. Recent always stores one serving, whatever was logged. */
   const log = (food: Food, servings = 1, extra: { source?: string; breakdown?: BreakdownItem[] } = {}) => {
-    addMeal(makeMeal(food, cat, servings, extra));
+    addMeal(makeMeal(food, cat, servings, { ...extra, ...(food.icon ? { icon: food.icon } : {}) }));
     pushRecent(food);
     toast(`Added to ${catLabel}`);
   };
@@ -63,6 +80,7 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
         <div>
           <h1>Log food</h1>
           <p className={isToday ? undefined : 'log-past'}>{isToday ? 'Today' : `Logging to ${dayLabel}`}</p>
+          <p className="log-left">{leftText}</p>
         </div>
       </header>
 
@@ -79,17 +97,17 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={tab} className="log-body" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
           {tab === 'recent' && (
-            <FoodList foods={recent} onQuickAdd={(f) => log(f, 1, { source: 'recent' })} onOpen={setOpen} empty={<p>Foods you log show up here, ready to add again in one tap.</p>} />
+            <FoodList foods={recent} onQuickAdd={(f) => log(f, 1, { source: 'recent' })} onOpen={(f) => openFood(f, 'recent')} empty={<p>Foods you log show up here, ready to add again in one tap.</p>} />
           )}
 
           {tab === 'saved' && (
             <FoodList
               foods={saved}
               onQuickAdd={(f) => log(f, 1, { source: 'saved' })}
-              onOpen={setOpen}
+              onOpen={(f) => openFood(f, 'saved')}
               empty={<p>Save the foods you eat most to log them in one tap.</p>}
               action={
-                <button className="new-food press" onClick={() => setCreating(true)}>
+                <button className="new-food press" onClick={() => setForm('new')}>
                   <Plus size={18} strokeWidth={2.4} /> New food
                 </button>
               }
@@ -111,7 +129,7 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
             <ScanTab
               catLabel={catLabel}
               onAdd={(m) => {
-                log({ name: m.name, ...m.base }, m.servings, { source: 'scan', breakdown: m.breakdown });
+                log({ name: m.name, ...m.base, icon: m.icon }, m.servings, { source: 'scan', breakdown: m.breakdown });
                 onDone();
               }}
             />
@@ -120,27 +138,42 @@ export function LogScreen({ dateKey, cat, onCatChange, onDone }: Props) {
       </AnimatePresence>
 
       <FoodSheet
-        food={open}
+        food={open?.food ?? null}
+        kind={openKind}
         catLabel={catLabel}
-        canSave={!!open && !isSaved(open)}
+        canSave={!!open && !isSaved(open.food)}
         onClose={() => setOpen(null)}
         onAdd={(f, servings) => {
-          log(f, servings, { source: isSaved(f) ? 'saved' : 'recent' });
+          log(f, servings, { source: openKind });
           setOpen(null);
         }}
         onSave={(f) => {
-          saveFood({ name: f.name, cal: f.cal, prot: f.prot, carb: f.carb, fat: f.fat });
+          saveFood({ name: f.name, cal: f.cal, prot: f.prot, carb: f.carb, fat: f.fat, icon: f.icon });
           toast('Saved to My foods');
+        }}
+        onEdit={(f) => {
+          setOpen(null);
+          setForm(f);
+        }}
+        onRemove={(f) => {
+          setOpen(null);
+          if (openKind === 'saved' && f.id) {
+            deleteFood(f.id);
+            toast('Food deleted', { label: 'Undo', onClick: () => saveFood(f) });
+          } else {
+            removeRecent(f.name);
+            toast('Removed from Recent', { label: 'Undo', onClick: () => pushRecent(f) });
+          }
         }}
       />
 
-      <NewFoodSheet
-        open={creating}
-        onClose={() => setCreating(false)}
+      <FoodFormSheet
+        editing={form}
+        onClose={() => setForm(null)}
         onSave={(f) => {
           saveFood(f);
-          setCreating(false);
-          toast('Saved to My foods');
+          setForm(null);
+          toast(f.id ? 'Food updated' : 'Saved to My foods');
         }}
       />
     </main>
@@ -265,24 +298,32 @@ function ManualEntry({ catLabel, onAdd }: { catLabel: string; onAdd: (food: Food
   );
 }
 
-function NewFoodSheet({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (f: Food) => void }) {
+function FoodFormSheet({ editing, onClose, onSave }: { editing: Food | 'new' | null; onClose: () => void; onSave: (f: Food) => void }) {
   const [draft, setDraft] = useState<FoodDraft>(EMPTY_DRAFT);
+  const [mode, setMode] = useState<Food | 'new'>('new'); // kept while the sheet animates out
   const valid = draft.name.trim().length > 0;
+
+  useEffect(() => {
+    if (!editing) return;
+    setMode(editing);
+    setDraft(editing === 'new' ? EMPTY_DRAFT : { name: editing.name, cal: String(editing.cal), prot: String(editing.prot), carb: String(editing.carb), fat: String(editing.fat) });
+  }, [editing]);
+
+  const isEdit = mode !== 'new';
   return (
-    <Sheet open={open} onClose={onClose} label="New food">
+    <Sheet open={!!editing} onClose={onClose} label={isEdit ? 'Edit food' : 'New food'}>
       <form
         className="msheet"
         onSubmit={(e) => {
           e.preventDefault();
           if (!valid) return;
-          onSave({ name: draft.name.trim(), ...draftMacros(draft) });
-          setDraft(EMPTY_DRAFT);
+          onSave({ ...(isEdit && mode.id ? { id: mode.id } : {}), name: draft.name.trim(), ...draftMacros(draft) });
         }}
       >
-        <h2 className="msheet-name">New food</h2>
+        <h2 className="msheet-name">{isEdit ? 'Edit food' : 'New food'}</h2>
         <p className="manual-hint">Enter the macros for one serving.</p>
         <MacroFields draft={draft} onChange={setDraft} />
-        <button className="btn btn-primary press" disabled={!valid}>Save food</button>
+        <button className="btn btn-primary press" disabled={!valid}>{isEdit ? 'Save changes' : 'Save food'}</button>
       </form>
     </Sheet>
   );

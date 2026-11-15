@@ -8,7 +8,7 @@ export function makeMeal(
   food: Macros & { name: string },
   cat: Category,
   servings = 1,
-  extra: { source?: string; breakdown?: BreakdownItem[] } = {}
+  extra: { source?: string; breakdown?: BreakdownItem[]; icon?: string } = {}
 ): Meal {
   const base: Macros = { cal: Math.round(food.cal) || 0, prot: Math.round(food.prot) || 0, carb: Math.round(food.carb) || 0, fat: Math.round(food.fat) || 0 };
   return {

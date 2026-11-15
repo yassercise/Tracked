@@ -3,6 +3,7 @@ import { ArrowUp, Camera, ScanLine, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { analyze, type ScanResult } from '../../lib/ai';
 import { toPhoto, type Photo } from '../../lib/images';
+import { iconFor } from '../../lib/foodIcon';
 import { scale, sum } from '../../lib/macros';
 import type { BreakdownItem, Macros } from '../../lib/types';
 import { AnimatedNumber } from '../../ui/AnimatedNumber';
@@ -17,6 +18,7 @@ export interface ScannedMeal {
   base: Macros; // one serving = the sum of the breakdown
   servings: number;
   breakdown: BreakdownItem[];
+  icon?: string;
 }
 
 interface Props {
@@ -157,6 +159,7 @@ export function ScanTab({ catLabel, onAdd }: Props) {
                   {result.breakdown.map((b, i) => (
                     <motion.li key={`${b.item}-${b.weight}-${i}`} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ type: 'spring', stiffness: 380, damping: 34 }}>
                       <div className="bd-row">
+                        <span className="food-icon" aria-hidden="true">{iconFor(b.item)}</span>
                         <div className="bd-main">
                           <span className="bd-item">{b.item} <small>{b.weight}</small></span>
                           <span className="macro-line">
@@ -205,7 +208,7 @@ export function ScanTab({ catLabel, onAdd }: Props) {
             <button
               className="btn btn-primary press"
               disabled={busy || !totals || result.breakdown.length === 0 || !name.trim()}
-              onClick={() => totals && onAdd({ name: name.trim(), base: totals, servings, breakdown: result.breakdown })}
+              onClick={() => totals && onAdd({ name: name.trim(), base: totals, servings, breakdown: result.breakdown, icon: result.icon || undefined })}
             >
               Add to {catLabel}
             </button>

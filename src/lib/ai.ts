@@ -9,6 +9,7 @@ export interface ScanImage {
 export interface ScanResult {
   name: string;
   notes: string;
+  icon?: string;
   breakdown: BreakdownItem[];
 }
 
@@ -45,6 +46,7 @@ async function demoAnalyze(input: AnalyzeInput): Promise<ScanResult> {
   }
   return {
     name: 'Chicken and rice',
+    icon: '🍗',
     notes: input.images?.length ? 'Oil used in cooking is the main uncertainty.' : '',
     breakdown: [
       { item: 'Grilled chicken breast', weight: '200g', cal: 330, prot: 62, carb: 0, fat: 7 },

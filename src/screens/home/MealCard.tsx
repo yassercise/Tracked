@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { Coffee, Cookie, Moon, Plus, Sun, Sunrise, type LucideIcon } from 'lucide-react';
+import { iconOf } from '../../lib/foodIcon';
 import { fmt, fmtServings, sum } from '../../lib/macros';
 import type { Category, Meal } from '../../lib/types';
 
@@ -51,6 +52,7 @@ export function MealCard({ cat, label, meals, onAdd, onOpen }: Props) {
                 transition={{ type: 'spring', stiffness: 360, damping: 32, backgroundColor: { duration: 1.4, delay: 0.2 } }}
               >
                 <button className="meal-row press" onClick={() => onOpen(m)}>
+                  <span className="food-icon" aria-hidden="true">{iconOf(m)}</span>
                   <span className="meal-name">
                     {m.name}
                     {m.servings !== 1 && <small> {fmtServings(m.servings)}</small>}

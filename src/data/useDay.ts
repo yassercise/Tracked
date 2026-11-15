@@ -32,6 +32,16 @@ export function normalizeDay(key: string, data: Record<string, any> | undefined)
 // Firestore rejects undefined values; JSON round-trip drops them.
 const clean = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 
+/** Add a meal to any day without subscribing to it (used for "Log again"). */
+export function addMealToDay(key: string, meal: Meal) {
+  if (DEMO) {
+    const day = demoStore[key] ?? demoDay(key);
+    demoStore[key] = { ...day, meals: [...day.meals, meal] };
+    return;
+  }
+  void setDoc(dayRef(key), { meals: arrayUnion(clean(meal)), date: key }, { merge: true });
+}
+
 /** Live data for one day (today or any past day) plus the actions that change it. */
 export function useDay(key: string) {
   const [state, setState] = useState<{ key: string; day: DayDoc; ready: boolean }>({ key, day: empty(key), ready: false });

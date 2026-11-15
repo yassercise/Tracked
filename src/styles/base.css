@@ -63,7 +63,7 @@ h1, h2, h3, p { margin: 0; }
 .screen {
   max-width: 480px;
   margin: 0 auto;
-  padding: calc(var(--safe-top) + 14px) var(--gutter) calc(var(--tabbar-h) + var(--safe-bottom) + 40px);
+  padding: calc(var(--safe-top) + 14px) var(--gutter) calc(var(--tabbar-h) + max(12px, var(--safe-bottom) - 14px) + 96px);
   min-height: 100dvh;
 }
 

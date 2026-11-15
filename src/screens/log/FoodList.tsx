@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, Plus, Search } from 'lucide-react';
 import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { iconOf } from '../../lib/foodIcon';
 import { fmt } from '../../lib/macros';
 import type { Food } from '../../lib/types';
 
@@ -57,6 +58,7 @@ export function FoodList({ foods, empty, onQuickAdd, onOpen, action }: Props) {
             return (
               <li key={key}>
                 <button className="food-row press" onClick={() => onOpen(f)}>
+                  <span className="food-icon" aria-hidden="true">{iconOf(f)}</span>
                   <span className="food-name">{f.name}</span>
                   <span className="macro-line">
                     <span><b className="num kcal">{fmt(f.cal)}</b> kcal</span>

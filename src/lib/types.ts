@@ -35,6 +35,7 @@ export interface Meal extends Macros {
   ts: number;
   source?: string;
   breakdown?: BreakdownItem[];
+  icon?: string; // emoji; set by AI scans, otherwise derived from the name
 }
 
 export interface DayDoc {
@@ -48,6 +49,7 @@ export interface Food extends Macros {
   id?: string;
   name: string;
   ts?: number;
+  icon?: string;
 }
 
 export interface Targets extends Macros {

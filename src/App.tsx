@@ -31,7 +31,7 @@ export function App() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={tab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.17, ease: [0.22, 1, 0.36, 1] }}>
             {tab === 'home' && <HomeScreen dateKey={dateKey} onDateChange={setDateKey} targets={targets} onLog={openLog} />}
-            {tab === 'log' && <LogScreen dateKey={dateKey} cat={logCat} onCatChange={setLogCat} onDone={() => setTab('home')} />}
+            {tab === 'log' && <LogScreen dateKey={dateKey} cat={logCat} targets={targets} onCatChange={setLogCat} onDone={() => setTab('home')} />}
             {tab === 'trends' && (
               <main className="screen placeholder">
                 <h1>Trends</h1>

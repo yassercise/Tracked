@@ -6,7 +6,7 @@
 //   previous?:    { name, breakdown }                           the last result, when correcting it
 //   feedback?:    string                                        what to correct
 // }
-// Returns: { name, notes, breakdown: [{ item, weight, cal, prot, carb, fat }] }
+// Returns: { name, notes, icon, breakdown: [{ item, weight, cal, prot, carb, fat }] }
 //
 // There are deliberately no meal totals in the response. The app always adds up the
 // breakdown itself, so totals and breakdown can never disagree.
@@ -37,6 +37,7 @@ const TOOL = {
     properties: {
       name: { type: 'string', description: 'Short plain name for the whole meal' },
       notes: { type: 'string', description: 'One short sentence on accuracy, or empty' },
+      icon: { type: 'string', description: 'One single emoji that best represents the whole meal, e.g. 🍗 or 🍔' },
       breakdown: {
         type: 'array',
         description: 'Every food item in the meal',
@@ -55,7 +56,7 @@ const TOOL = {
         },
       },
     },
-    required: ['name', 'notes', 'breakdown'],
+    required: ['name', 'notes', 'icon', 'breakdown'],
     additionalProperties: false,
   },
 };
@@ -128,6 +129,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       name: String(out.name || 'Meal').trim(),
       notes: String(out.notes || '').trim(),
+      // Keep only a short emoji; anything longer is dropped and the app picks one from the name.
+      icon: typeof out.icon === 'string' && [...out.icon.trim()].length <= 4 ? out.icon.trim() : '',
       breakdown: out.breakdown.map((b) => ({
         item: String(b.item || 'Item').trim(),
         weight: String(b.weight || '').trim(),
