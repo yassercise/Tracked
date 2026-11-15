@@ -51,17 +51,16 @@ export function FoodSheet({ food, kind, catLabel, canSave, onClose, onAdd, onSav
           </div>
           <button className="btn btn-primary press" onClick={() => onAdd(shown, servings)}>Add to {catLabel}</button>
 
-          {kind === 'saved' ? (
+          <div className="sheet-actions">
             <button className="btn-soft press" onClick={() => onEdit(shown)}>
               <Pencil size={17} /> Edit food
             </button>
-          ) : (
-            canSave && (
+            {kind === 'recent' && canSave && (
               <button className="btn-soft press" onClick={() => onSave(shown)}>
                 <BookmarkPlus size={18} /> Save to My foods
               </button>
-            )
-          )}
+            )}
+          </div>
 
           <button className="btn btn-quiet press" onClick={() => onRemove(shown)}>
             {kind === 'saved' ? 'Delete food' : 'Remove from Recent'}

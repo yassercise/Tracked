@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowUp, Mic, Plus } from 'lucide-react';
+import { ArrowUp, Plus } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useDay } from '../../data/useDay';
 import { useFoods } from '../../data/useFoods';
@@ -7,8 +7,9 @@ import { dayLong, fromKey, todayKey } from '../../lib/dates';
 import { analyze } from '../../lib/ai';
 import { fmt, sum } from '../../lib/macros';
 import { makeMeal } from '../../lib/meals';
-import { speechSupported, useSpeech } from '../../lib/speech';
+import { speechSupported } from '../../lib/speech';
 import { CATEGORIES, type BreakdownItem, type Category, type Food, type Targets } from '../../lib/types';
+import { MicButton } from '../../ui/MicButton';
 import { Segmented } from '../../ui/Segmented';
 import { Stepper } from '../../ui/Stepper';
 import { useToast } from '../../ui/Toast';
@@ -40,12 +41,13 @@ interface Props {
 export function LogScreen({ dateKey, cat, targets, onCatChange, onDone }: Props) {
   const toast = useToast();
   const { day, addMeal } = useDay(dateKey);
-  const { recent, saved, pushRecent, removeRecent, saveFood, deleteFood } = useFoods();
+  const { recent, saved, pushRecent, removeRecent, setRecentList, saveFood, deleteFood } = useFoods();
   const [tab, setTab] = useState<LogTab>('recent');
   const [open, setOpen] = useState<{ food: Food; kind: FoodKind } | null>(null);
   const [openKind, setOpenKind] = useState<FoodKind>('recent');
   // null = closed, 'new' = creating, a Food = editing that saved food
   const [form, setForm] = useState<Food | 'new' | null>(null);
+  const [formKind, setFormKind] = useState<FoodKind>('saved');
 
   const openFood = (food: Food, kind: FoodKind) => {
     setOpenKind(kind);
@@ -107,7 +109,7 @@ export function LogScreen({ dateKey, cat, targets, onCatChange, onDone }: Props)
               onOpen={(f) => openFood(f, 'saved')}
               empty={<p>Save the foods you eat most to log them in one tap.</p>}
               action={
-                <button className="new-food press" onClick={() => setForm('new')}>
+                <button className="new-food press" onClick={() => { setFormKind('saved'); setForm('new'); }}>
                   <Plus size={18} strokeWidth={2.4} /> New food
                 </button>
               }
@@ -153,6 +155,7 @@ export function LogScreen({ dateKey, cat, targets, onCatChange, onDone }: Props)
         }}
         onEdit={(f) => {
           setOpen(null);
+          setFormKind(openKind);
           setForm(f);
         }}
         onRemove={(f) => {
@@ -171,9 +174,16 @@ export function LogScreen({ dateKey, cat, targets, onCatChange, onDone }: Props)
         editing={form}
         onClose={() => setForm(null)}
         onSave={(f) => {
-          saveFood(f);
+          if (form && form !== 'new' && formKind === 'recent') {
+            // Editing an entry in Recent: replace it in place, keeping its position.
+            const original = form.name;
+            setRecentList(recent.map((r) => (r.name === original ? { ...r, ...f } : r)));
+            toast('Food updated');
+          } else {
+            saveFood(f);
+            toast(f.id ? 'Food updated' : 'Saved to My foods');
+          }
           setForm(null);
-          toast(f.id ? 'Food updated' : 'Saved to My foods');
         }}
       />
     </main>
@@ -212,13 +222,7 @@ function ManualEntry({ catLabel, onAdd }: { catLabel: string; onAdd: (food: Food
     }
   };
 
-  const speech = useSpeech({
-    onText: (t) => {
-      saidRef.current = t;
-      setSaid(t);
-    },
-    onEnd: (t) => void fill(t || saidRef.current),
-  });
+  const saidField = useRef<HTMLInputElement>(null);
 
   return (
     <form
@@ -228,11 +232,12 @@ function ManualEntry({ catLabel, onAdd }: { catLabel: string; onAdd: (food: Food
         if (valid) onAdd({ name: draft.name.trim(), ...draftMacros(draft) }, servings, keep, filled ? { source: 'voice', breakdown: filled.breakdown } : { source: 'manual' });
       }}
     >
-      <section className={`card describe${speech.listening ? ' listening' : ''}`}>
-        <h3>{speech.listening ? 'Listening…' : 'Say what you ate'}</h3>
-        <p>{speechSupported ? 'Tap the mic and speak, or type it. The form fills in for you.' : 'Type it, or use the mic on your keyboard. The form fills in for you.'}</p>
+      <section className="card describe">
+        <h3>Say what you ate</h3>
+        <p>{speechSupported ? 'Tap the mic and speak, or type it. The form fills in for you.' : 'Type it, or tap the mic and dictate with your keyboard. The form fills in for you.'}</p>
         <div className="field-box">
           <input
+            ref={saidField}
             value={said}
             onChange={(e) => setSaid(e.target.value)}
             onKeyDown={(e) => {
@@ -246,11 +251,16 @@ function ManualEntry({ catLabel, onAdd }: { catLabel: string; onAdd: (food: Food
             enterKeyHint="go"
             disabled={busy}
           />
-          {speechSupported && (
-            <button type="button" className={`mic press${speech.listening ? ' on' : ''}`} aria-label={speech.listening ? 'Stop listening' : 'Speak'} aria-pressed={speech.listening} disabled={busy} onClick={speech.toggle}>
-              <Mic size={19} strokeWidth={2.2} />
-            </button>
-          )}
+          <MicButton
+            field={saidField}
+            label="Speak"
+            disabled={busy}
+            onText={(t) => {
+              saidRef.current = t;
+              setSaid(t);
+            }}
+            onDone={(t) => void fill(t || saidRef.current)}
+          />
           <button type="button" className="send press" aria-label="Fill in the form" disabled={!said.trim() || busy} onClick={() => void fill(said)}>
             {busy ? <span className="spinner" /> : <ArrowUp size={19} strokeWidth={2.6} />}
           </button>

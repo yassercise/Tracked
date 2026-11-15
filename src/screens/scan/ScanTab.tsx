@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowUp, Camera, ScanLine, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { ArrowUp, Camera, Plus, ScanLine, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { analyze, type ScanResult } from '../../lib/ai';
 import { toPhoto, type Photo } from '../../lib/images';
 import { iconFor } from '../../lib/foodIcon';
@@ -8,7 +8,9 @@ import { scale, sum } from '../../lib/macros';
 import type { BreakdownItem, Macros } from '../../lib/types';
 import { AnimatedNumber } from '../../ui/AnimatedNumber';
 import { MicButton } from '../../ui/MicButton';
+import { Sheet } from '../../ui/Sheet';
 import { Stepper } from '../../ui/Stepper';
+import { EMPTY_DRAFT, MacroFields, draftMacros, type FoodDraft } from '../log/MacroFields';
 import './scan.css';
 
 const MAX_PHOTOS = 4;
@@ -36,7 +38,11 @@ export function ScanTab({ catLabel, onAdd }: Props) {
   const [name, setName] = useState('');
   const [servings, setServings] = useState(1);
   const [feedback, setFeedback] = useState('');
+  // null = closed, 'new' = adding an item, a number = editing that item
+  const [itemEdit, setItemEdit] = useState<number | 'new' | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const detailsField = useRef<HTMLTextAreaElement>(null);
+  const feedbackField = useRef<HTMLInputElement>(null);
 
   const totals = result ? sum(result.breakdown) : null;
   const shown = totals ? scale(totals, servings) : null;
@@ -117,13 +123,14 @@ export function ScanTab({ catLabel, onAdd }: Props) {
               <span>Details</span>
               <div className="field-box area">
                 <textarea
+                  ref={detailsField}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Optional. Weights, how it was cooked, the brand."
                   rows={2}
                   disabled={busy}
                 />
-                <MicButton onText={setDescription} label="Dictate details" />
+                <MicButton onText={setDescription} field={detailsField} label="Dictate details" disabled={busy} />
               </div>
             </label>
 
@@ -160,7 +167,7 @@ export function ScanTab({ catLabel, onAdd }: Props) {
                     <motion.li key={`${b.item}-${b.weight}-${i}`} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ type: 'spring', stiffness: 380, damping: 34 }}>
                       <div className="bd-row">
                         <span className="food-icon" aria-hidden="true">{iconFor(b.item)}</span>
-                        <div className="bd-main">
+                        <button className="bd-main press" aria-label={`Edit ${b.item}`} disabled={busy} onClick={() => setItemEdit(i)}>
                           <span className="bd-item">{b.item} <small>{b.weight}</small></span>
                           <span className="macro-line">
                             <span><b className="num kcal">{b.cal}</b> kcal</span>
@@ -168,7 +175,7 @@ export function ScanTab({ catLabel, onAdd }: Props) {
                             <span>C <b className="num">{b.carb}</b></span>
                             <span>F <b className="num">{b.fat}</b></span>
                           </span>
-                        </div>
+                        </button>
                         <button className="bd-remove press" aria-label={`Remove ${b.item}`} disabled={busy} onClick={() => removeItem(i)}>
                           <X size={16} strokeWidth={2.4} />
                         </button>
@@ -177,7 +184,10 @@ export function ScanTab({ catLabel, onAdd }: Props) {
                   ))}
                 </AnimatePresence>
               </ul>
-              {result.breakdown.length === 0 && <p className="bd-empty">Every item was removed. Correct the scan below or start over.</p>}
+              <button className="bd-add press" disabled={busy} onClick={() => setItemEdit('new')}>
+                <Plus size={17} strokeWidth={2.4} /> Add an item
+              </button>
+              {result.breakdown.length === 0 && <p className="bd-empty">Every item was removed. Add one, correct the scan below, or start over.</p>}
               {result.notes && <p className="bd-notes">{result.notes}</p>}
             </section>
 
@@ -190,8 +200,8 @@ export function ScanTab({ catLabel, onAdd }: Props) {
             >
               <span>Something off?</span>
               <div className="field-box feedback">
-                <input value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="The rice was 150 g, no oil" disabled={busy} enterKeyHint="send" />
-                <MicButton onText={setFeedback} label="Dictate a correction" />
+                <input ref={feedbackField} value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="The rice was 150 g, no oil" disabled={busy} enterKeyHint="send" />
+                <MicButton onText={setFeedback} field={feedbackField} label="Dictate a correction" disabled={busy} />
                 <button className="send press" aria-label="Re-scan with this correction" disabled={!feedback.trim() || busy}>
                   {busy ? <span className="spinner" /> : <ArrowUp size={19} strokeWidth={2.6} />}
                 </button>
@@ -216,7 +226,58 @@ export function ScanTab({ catLabel, onAdd }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ItemSheet
+        editing={itemEdit === null ? null : itemEdit === 'new' ? 'new' : result?.breakdown[itemEdit] ?? null}
+        onClose={() => setItemEdit(null)}
+        onSave={(item) => {
+          // Totals follow automatically: they are always the sum of the items.
+          setResult((r) => {
+            if (!r) return r;
+            const breakdown = itemEdit === 'new' ? [...r.breakdown, item] : r.breakdown.map((b, i) => (i === itemEdit ? item : b));
+            return { ...r, breakdown };
+          });
+          setItemEdit(null);
+        }}
+      />
     </div>
+  );
+}
+
+/** Edit one item of the breakdown, or add a missing one. */
+function ItemSheet({ editing, onClose, onSave }: { editing: BreakdownItem | 'new' | null; onClose: () => void; onSave: (item: BreakdownItem) => void }) {
+  const [draft, setDraft] = useState<FoodDraft>(EMPTY_DRAFT);
+  const [weight, setWeight] = useState('');
+  const [isNew, setIsNew] = useState(false);
+
+  useEffect(() => {
+    if (!editing) return;
+    setIsNew(editing === 'new');
+    setDraft(editing === 'new' ? EMPTY_DRAFT : { name: editing.item, cal: String(editing.cal), prot: String(editing.prot), carb: String(editing.carb), fat: String(editing.fat) });
+    setWeight(editing === 'new' ? '' : editing.weight);
+  }, [editing]);
+
+  const valid = draft.name.trim().length > 0;
+  return (
+    <Sheet open={!!editing} onClose={onClose} label={isNew ? 'Add item' : 'Edit item'}>
+      <form
+        className="msheet"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (valid) onSave({ item: draft.name.trim(), weight: weight.trim(), ...draftMacros(draft) });
+        }}
+      >
+        <h2 className="msheet-name">{isNew ? 'Add item' : 'Edit item'}</h2>
+        <MacroFields draft={draft} onChange={setDraft} />
+        <label className="field">
+          <span>Amount</span>
+          <div className="field-box">
+            <input value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="150g" />
+          </div>
+        </label>
+        <button className="btn btn-primary press" disabled={!valid}>{isNew ? 'Add item' : 'Save item'}</button>
+      </form>
+    </Sheet>
   );
 }
 

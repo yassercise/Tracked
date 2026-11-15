@@ -23,14 +23,14 @@
 @keyframes sweep { to { top: 100%; } }
 
 /* Text areas */
-.field-box.area { height: auto; align-items: flex-end; padding: 10px 8px 10px 14px; gap: 6px; }
+.field-box.area { height: auto; align-items: center; padding: 8px 8px 8px 14px; gap: 8px; }
 .field-box textarea { flex: 1; min-width: 0; resize: none; font: inherit; font-size: 16px; line-height: 1.4; color: var(--text); background: none; border: 0; outline: none; padding: 4px 0; }
 .field-box textarea::placeholder { color: var(--text-3); }
 .field-box.feedback { padding-right: 6px; gap: 6px; }
 .field-box.feedback input { font-weight: 500; font-size: 16px; }
 .send { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-content: center; color: #1a0f00; background: var(--amber); transition: opacity 0.2s, transform 0.28s var(--spring); }
 .send:disabled { opacity: 0.3; }
-.send svg { margin: 0; color: inherit; }
+.send svg { display: block; }
 
 .scan-hint { text-align: center; font-size: 14px; color: var(--text-3); }
 .scan-error { padding: 12px 14px; border-radius: 14px; font-size: 14.5px; color: #ffd9d4; background: rgba(255, 107, 94, 0.12); border: 1px solid rgba(255, 107, 94, 0.3); }
@@ -41,7 +41,7 @@
 .bd ul { list-style: none; margin: 0; padding: 0; }
 .bd li { overflow: hidden; }
 .bd-row { display: flex; align-items: center; gap: 8px; padding: 10px 6px 10px 10px; border-top: 1px solid var(--line); }
-.bd-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.bd-main { flex: 1; min-width: 0; display: grid; gap: 2px; text-align: left; border-radius: 10px; }
 .bd-item { font-size: 15.5px; font-weight: 600; }
 .bd-item small { font-size: 13.5px; font-weight: 500; color: var(--text-3); margin-left: 4px; }
 .bd-remove { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-content: center; color: var(--text-3); background: rgba(255, 255, 255, 0.05); }
@@ -67,3 +67,7 @@
 .filled-from ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
 .filled-from li { display: flex; justify-content: space-between; gap: 12px; }
 .filled-from b { color: var(--text); font-weight: 500; }
+
+.bd-add { display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 10px; border-top: 1px solid var(--line); font-size: 14.5px; font-weight: 600; color: var(--amber); }
+.bd-add:disabled { opacity: 0.4; }
+.msheet-macros[role='button'] { cursor: pointer; }

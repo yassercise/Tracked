@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { BookmarkPlus, ChevronDown, CopyPlus } from 'lucide-react';
+import { BookmarkPlus, ChevronDown, CopyPlus, Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { iconOf } from '../../lib/foodIcon';
 import { fmt, scale } from '../../lib/macros';
@@ -66,7 +66,7 @@ export function MealSheet({ meal, isToday, onClose, onSave, onDelete, onLogAgain
       <div className="msheet">
         <h2 className="msheet-name"><span className="food-icon" aria-hidden="true">{iconOf({ name: name || shown.name, icon: shown.icon })}</span>{name || shown.name}</h2>
 
-        <div className="msheet-macros">
+        <div className="msheet-macros" role="button" tabIndex={0} aria-label="Edit calories and macros" onClick={() => setEditing(true)} onKeyDown={(e) => e.key === 'Enter' && setEditing(true)}>
           <div className="is-cal"><span className="num">{fmt(preview.cal)}</span><small>kcal</small></div>
           <div><span className="num">{fmt(preview.prot)}</span><small>g protein</small></div>
           <div><span className="num">{fmt(preview.carb)}</span><small>g carbs</small></div>
@@ -87,13 +87,13 @@ export function MealSheet({ meal, isToday, onClose, onSave, onDelete, onLogAgain
         </div>
 
         <div>
-          <button className="disclosure" aria-expanded={editing} onClick={() => setEditing((e) => !e)}>
-            Edit name and macros <ChevronDown size={20} />
+          <button className="btn-soft edit-toggle press" aria-expanded={editing} onClick={() => setEditing((e) => !e)}>
+            <Pencil size={17} /> Edit name, calories and macros <ChevronDown className="chev" size={18} />
           </button>
           <AnimatePresence initial={false}>
             {editing && (
               <motion.div style={{ overflow: 'hidden' }} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 380, damping: 36 }}>
-                <p className="manual-hint" style={{ margin: '4px 0 12px' }}>Macros for one serving.</p>
+                <p className="manual-hint" style={{ margin: '14px 0 12px' }}>Values for one serving. Servings multiply them.</p>
                 <MacroFields draft={draft} onChange={setDraft} />
               </motion.div>
             )}
